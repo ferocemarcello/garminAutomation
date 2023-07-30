@@ -296,14 +296,11 @@ class Download:
                 # pause for a second between every page access
                 time.sleep(1)
 
-    def get_activity_types(self, directory, overwite):
+    def get_activity_types(self, directory, overwrite):
         """Download the activity types from Garmin Connect and save to a JSON file."""
-        root_logger.info("get_activity_types: '%s'", directory)
         json_filename = f'{directory}/activity_types'
-        try:
-            self.activity_service_rest_client.download_json_file('activityTypes', json_filename, overwite)
-        except RestException as e:
-            root_logger.error("Exception getting activity types: %s", e)
+        activity_types = self.activity_service_rest_client.download_json_file('activityTypes', json_filename, overwrite)
+        return activity_types
 
     def __get_sleep_day(self, directory, date, overwite=False):
         json_filename = f'{directory}/sleep_{date}'
