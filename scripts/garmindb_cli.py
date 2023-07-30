@@ -104,25 +104,20 @@ def copy_data(overwite, latest, stats):
         copy.copy_sleep(monitoring_dir, latest)
 
 
-def download_data(overwrite, latest, stats):
+def download_data():
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
     downloaded data if indicated."""
-    logger.info("___Downloading %s Data___", 'Latest' if latest else 'All')
 
     download = Download()
     if not download.login():
         logger.error("Failed to login!")
         sys.exit()
 
-    if Statistics.activities in stats:
-        if latest:
-            activity_count = gc_config.latest_activity_count()
-        else:
-            activity_count = gc_config.all_activity_count()
-        activities_dir = ConfigManager.get_or_create_activities_dir()
-        root_logger.info("Fetching %d activities to %s", activity_count, activities_dir)
-        download.get_activity_types(activities_dir, overwrite)
-        download.get_activities(activities_dir, activity_count, overwrite)
+    activity_count = gc_config.all_activity_count()
+    activities_dir = ConfigManager.get_or_create_activities_dir()
+    root_logger.info("Fetching %d activities to %s", activity_count, activities_dir)
+    download.get_activity_types(activities_dir, False)
+    download.get_activities(activities_dir, activity_count, False)
 
     if Statistics.monitoring in stats:
         date, days = __get_date_and_days(MonitoringDb(db_params_dict), latest, MonitoringHeartRate, MonitoringHeartRate.heart_rate, 'monitoring')
@@ -279,7 +274,7 @@ def google_earth_activity(debug, export_activity_id):
     OpenWithGoogleEarth.open(file_with_path)
 
 
-def main(argv):
+def main():
     """Manage Garmin device data."""
     python_version_check(sys.argv[0])
 
@@ -312,7 +307,7 @@ def main(argv):
                                  action="store_true", default=False)
     args = parser.parse_args()
 
-    download_data(args.overwrite, args.latest, args.stats)
+    download_data()
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
