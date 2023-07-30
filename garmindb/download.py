@@ -22,13 +22,12 @@ from idbutils import RestClient, RestException, RestResponseException
 from .garmin_connect_config_manager import GarminConnectConfigManager
 from .config_manager import ConfigManager
 
-
 logger = logging.getLogger(__file__)
 logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 root_logger = logging.getLogger()
 
 
-class Download():
+class Download:
     """Class for downloading health data from Garmin Connect."""
 
     garmin_connect_base_url = "https://connect.garmin.com"
@@ -63,8 +62,10 @@ class Download():
         logger.debug("__init__")
         self.session = cloudscraper.CloudScraper()
         self.sso_rest_client = RestClient(self.session, 'sso.garmin.com', 'sso', aditional_headers=self.garmin_headers)
-        self.modern_rest_client = RestClient(self.session, 'connect.garmin.com', 'modern', aditional_headers=self.garmin_headers)
-        self.activity_service_rest_client = RestClient.inherit(self.modern_rest_client, "proxy/activity-service/activity")
+        self.modern_rest_client = RestClient(self.session, 'connect.garmin.com', 'modern',
+                                             aditional_headers=self.garmin_headers)
+        self.activity_service_rest_client = RestClient.inherit(self.modern_rest_client,
+                                                               "proxy/activity-service/activity")
         self.download_service_rest_client = RestClient.inherit(self.modern_rest_client, "proxy/download-service/files")
         self.gc_config = GarminConnectConfigManager()
         self.download_days_overlap = 3  # Existing donloaded data will be redownloaded and overwritten if it is within this number of days of now.
@@ -86,37 +87,37 @@ class Download():
 
         logger.debug("login: %s %s", username, password)
         get_headers = {
-            'Referer'                           : self.garmin_connect_login_url
+            'Referer': self.garmin_connect_login_url
         }
         params = {
-            'service'                           : self.modern_rest_client.url(),
-            'webhost'                           : self.garmin_connect_base_url,
-            'source'                            : self.garmin_connect_login_url,
-            'redirectAfterAccountLoginUrl'      : self.modern_rest_client.url(),
-            'redirectAfterAccountCreationUrl'   : self.modern_rest_client.url(),
-            'gauthHost'                         : self.sso_rest_client.url(),
-            'locale'                            : 'en_US',
-            'id'                                : 'gauth-widget',
-            'cssUrl'                            : self.garmin_connect_css_url,
-            'privacyStatementUrl'               : '//connect.garmin.com/en-US/privacy/',
-            'clientId'                          : 'GarminConnect',
-            'rememberMeShown'                   : 'true',
-            'rememberMeChecked'                 : 'false',
-            'createAccountShown'                : 'true',
-            'openCreateAccount'                 : 'false',
-            'displayNameShown'                  : 'false',
-            'consumeServiceTicket'              : 'false',
-            'initialFocus'                      : 'true',
-            'embedWidget'                       : 'false',
-            'generateExtraServiceTicket'        : 'true',
-            'generateTwoExtraServiceTickets'    : 'false',
-            'generateNoServiceTicket'           : 'false',
-            'globalOptInShown'                  : 'true',
-            'globalOptInChecked'                : 'false',
-            'mobile'                            : 'false',
-            'connectLegalTerms'                 : 'true',
-            'locationPromptShown'               : 'true',
-            'showPassword'                      : 'true'
+            'service': self.modern_rest_client.url(),
+            'webhost': self.garmin_connect_base_url,
+            'source': self.garmin_connect_login_url,
+            'redirectAfterAccountLoginUrl': self.modern_rest_client.url(),
+            'redirectAfterAccountCreationUrl': self.modern_rest_client.url(),
+            'gauthHost': self.sso_rest_client.url(),
+            'locale': 'en_US',
+            'id': 'gauth-widget',
+            'cssUrl': self.garmin_connect_css_url,
+            'privacyStatementUrl': '//connect.garmin.com/en-US/privacy/',
+            'clientId': 'GarminConnect',
+            'rememberMeShown': 'true',
+            'rememberMeChecked': 'false',
+            'createAccountShown': 'true',
+            'openCreateAccount': 'false',
+            'displayNameShown': 'false',
+            'consumeServiceTicket': 'false',
+            'initialFocus': 'true',
+            'embedWidget': 'false',
+            'generateExtraServiceTicket': 'true',
+            'generateTwoExtraServiceTickets': 'false',
+            'generateNoServiceTicket': 'false',
+            'globalOptInShown': 'true',
+            'globalOptInChecked': 'false',
+            'mobile': 'false',
+            'connectLegalTerms': 'true',
+            'locationPromptShown': 'true',
+            'showPassword': 'true'
         }
         try:
             response = self.sso_rest_client.get(self.garmin_connect_sso_login, get_headers, params)
@@ -132,14 +133,14 @@ class Download():
         logger.debug("_csrf found (%s).", found.group(1))
 
         data = {
-            'username'  : username,
-            'password'  : password,
-            'embed'     : 'false',
-            '_csrf'     : found.group(1)
+            'username': username,
+            'password': password,
+            'embed': 'false',
+            '_csrf': found.group(1)
         }
         post_headers = {
-            'Referer'       : response.url,
-            'Content-Type'  : 'application/x-www-form-urlencoded'
+            'Referer': response.url,
+            'Content-Type': 'application/x-www-form-urlencoded'
         }
         try:
             response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
@@ -152,7 +153,7 @@ class Download():
             RestClient.save_binary_file('login_post.html', response)
             return False
         params = {
-            'ticket' : found.group(1)
+            'ticket': found.group(1)
         }
         try:
             response = self.modern_rest_client.get('', params=params)
@@ -207,7 +208,6 @@ class Download():
 
     def get_daily_summaries(self, directory_func, date, days, overwite):
         """Download the daily summary data from Garmin Connect and save to a JSON file."""
-        root_logger.info("Getting daily summaries: %s (%d)", date, days)
         self.__get_stat(self.__get_summary_day, directory_func, date, days, overwite)
 
     def __get_monitoring_day(self, date):
@@ -234,9 +234,9 @@ class Download():
         root_logger.info("Checking weight: %s overwite %r", day, overwite)
         date_str = day.strftime('%Y-%m-%d')
         params = {
-            'startDate' : date_str,
-            'endDate'   : date_str,
-            '_'         : str(conversions.dt_to_epoch_ms(conversions.date_to_dt(day)))
+            'startDate': date_str,
+            'endDate': date_str,
+            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(day)))
         }
         json_filename = f'{directory}/weight_{date_str}'
         try:
@@ -252,11 +252,11 @@ class Download():
     def __get_activity_summaries(self, start, count):
         root_logger.info("get_activity_summaries")
         params = {
-            'start' : str(start),
-            "limit" : str(count)
+            'start': str(start),
+            "limit": str(count)
         }
         try:
-            #'https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities'
+            # 'https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities'
             response = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params=params)
             return response.json()
         except RestException as e:
@@ -308,8 +308,8 @@ class Download():
     def __get_sleep_day(self, directory, date, overwite=False):
         json_filename = f'{directory}/sleep_{date}'
         params = {
-            'date'                  : date.strftime("%Y-%m-%d"),
-            'nonSleepBufferMinutes' : 60
+            'date': date.strftime("%Y-%m-%d"),
+            'nonSleepBufferMinutes': 60
         }
         url = f'{self.garmin_connect_sleep_daily_url}/{self.display_name}'
         try:
@@ -326,9 +326,9 @@ class Download():
         date_str = day.strftime('%Y-%m-%d')
         json_filename = f'{directory}/rhr_{date_str}'
         params = {
-            'fromDate'  : date_str,
-            'untilDate' : date_str,
-            'metricId'  : 60
+            'fromDate': date_str,
+            'untilDate': date_str,
+            'metricId': 60
         }
         url = f'{self.garmin_connect_rhr}/{self.display_name}'
         try:
