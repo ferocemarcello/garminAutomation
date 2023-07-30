@@ -151,19 +151,6 @@ class Download:
         root_logger.info("login: %s (%s)", self.full_name, self.display_name)
         return True
 
-    def __unzip_files(self, outdir):
-        """Unzip and downloaded zipped files into the directory supplied."""
-        root_logger.info("unzip_files: from %s to %s", self.temp_dir, outdir)
-        for filename in os.listdir(self.temp_dir):
-            match = re.search(r'.*\.zip', filename)
-            if match:
-                full_pathname = f'{self.temp_dir}/{filename}'
-                with zipfile.ZipFile(full_pathname, 'r') as files_zip:
-                    try:
-                        files_zip.extractall(outdir)
-                    except Exception as e:
-                        logger.error('Failed to unzip %s to %s: %s', full_pathname, outdir, e)
-
     def __get_stat(self, stat_function, directory, date, days, overwite):
         for day in tqdm(range(0, days), unit='days'):
             download_date = date + datetime.timedelta(days=day)
@@ -182,37 +169,26 @@ class Download:
         }
         url = f'{self.garmin_connect_daily_summary_url}/{self.display_name}'
         json_filename = f'{directory_func(date.year)}/daily_summary_{date_str}'
-        try:
-            self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
-        except RestException as e:
-            root_logger.error("Exception getting daily summary: %s", e)
+        self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
 
     def get_daily_summaries(self, directory_func, date, days, overwite):
         """Download the daily summary data from Garmin Connect and save to a JSON file."""
         self.__get_stat(self.__get_summary_day, directory_func, date, days, overwite)
 
     def __get_monitoring_day(self, date):
-        root_logger.info("get_monitoring_day: %s to %s", date, self.temp_dir)
         zip_filename = f'{self.temp_dir}/{date}.zip'
         url = f'wellness/{date.strftime("%Y-%m-%d")}'
-        try:
-            self.download_service_rest_client.download_binary_file(url, zip_filename)
-        except RestException as e:
-            root_logger.error("Exception getting daily summary: %s", e)
+        self.download_service_rest_client.download_binary_file(url, zip_filename)
 
     def get_monitoring(self, directory_func, date, days):
         """Download the daily monitoring data from Garmin Connect, unzip and save the raw files."""
-        root_logger.info("Getting monitoring: %s (%d)", date, days)
         for day in tqdm(range(0, days + 1), unit='days'):
             day_date = date + datetime.timedelta(day)
-            self.temp_dir = tempfile.mkdtemp()
             self.__get_monitoring_day(day_date)
-            self.__unzip_files(directory_func(day_date.year))
             # pause for a second between every page access
             time.sleep(1)
 
     def __get_weight_day(self, directory, day, overwite=False):
-        root_logger.info("Checking weight: %s overwite %r", day, overwite)
         date_str = day.strftime('%Y-%m-%d')
         params = {
             'startDate': date_str,
@@ -220,27 +196,19 @@ class Download:
             '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(day)))
         }
         json_filename = f'{directory}/weight_{date_str}'
-        try:
-            self.modern_rest_client.download_json_file(self.garmin_connect_weight_url, json_filename, overwite, params)
-        except RestException as e:
-            root_logger.error("Exception getting daily summary: %s", e)
+        self.modern_rest_client.download_json_file(self.garmin_connect_weight_url, json_filename, overwite, params)
 
-    def get_weight(self, directory, date, days, overwite):
+    def get_weight(self, directory, date, days, overwrite):
         """Download the sleep data from Garmin Connect and save to a JSON file."""
-        root_logger.info("Getting weight: %s (%d)", date, days)
-        self.__get_stat(self.__get_weight_day, directory, date, days, overwite)
+        self.__get_stat(self.__get_weight_day, directory, date, days, overwrite)
 
     def __get_activity_summaries(self, start, count):
-        root_logger.info("get_activity_summaries")
         params = {
             'start': str(start),
             "limit": str(count)
         }
-        try:
-            response = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params=params)
-            return response.json()
-        except RestException as e:
-            root_logger.error("Exception getting activity summary: %s", e)
+        response = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params=params)
+        return response.json()
 
     def __save_activity_details(self, directory, activity_id_str, overwite):
         root_logger.debug("save_activity_details")
@@ -259,7 +227,7 @@ class Download:
         except RestException as e:
             root_logger.error("Exception downloading activity file: %s", e)
 
-    def get_activities(self, directory, count, overwite=False):
+    def get_activities(self, directory, count, overwrite=False):
         """Download activities files from Garmin Connect and save the raw files."""
         activities = self.__get_activity_summaries(0, count)
         for activity in tqdm(activities or [], unit='activities'):
@@ -267,11 +235,11 @@ class Download:
             activity_name_str = conversions.printable(activity['activityName'])
             root_logger.info("get_activities: %s (%s)", activity_name_str, activity_id_str)
             json_filename = f'{directory}/activity_{activity_id_str}.json'
-            if not os.path.isfile(json_filename) or overwite:
+            if not os.path.isfile(json_filename) or overwrite:
                 root_logger.info("get_activities: %s <- %r", json_filename, activity)
-                self.__save_activity_details(directory, activity_id_str, overwite)
+                self.__save_activity_details(directory, activity_id_str, overwrite)
                 self.modern_rest_client.save_json_to_file(json_filename, activity)
-                if not os.path.isfile(f'{directory}/{activity_id_str}.fit') or overwite:
+                if not os.path.isfile(f'{directory}/{activity_id_str}.fit') or overwrite:
                     self.__save_activity_file(activity_id_str)
                 # pause for a second between every page access
                 time.sleep(1)
