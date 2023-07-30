@@ -4,27 +4,19 @@ __author__ = "Tom Goetz"
 __copyright__ = "Copyright Tom Goetz"
 __license__ = "GPL"
 
-import os
-import sys
-import re
-import logging
 import datetime
-import time
-import tempfile
-import zipfile
 import json
+import os
+import re
+import time
+
 import cloudscraper
+import fitfile.conversions as conversions
+from idbutils import RestClient
 from tqdm import tqdm
 
-import fitfile.conversions as conversions
-from idbutils import RestClient, RestException, RestResponseException
-
-from .garmin_connect_config_manager import GarminConnectConfigManager
 from .config_manager import ConfigManager
-
-logger = logging.getLogger(__file__)
-logger.addHandler(logging.StreamHandler(stream=sys.stdout))
-root_logger = logging.getLogger()
+from .garmin_connect_config_manager import GarminConnectConfigManager
 
 
 class Download:
@@ -59,7 +51,6 @@ class Download:
 
     def __init__(self):
         """Create a new Download class instance."""
-        logger.debug("__init__")
         self.session = cloudscraper.CloudScraper()
         self.sso_rest_client = RestClient(self.session, 'sso.garmin.com', 'sso', aditional_headers=self.garmin_headers)
         self.modern_rest_client = RestClient(self.session, 'connect.garmin.com', 'modern',
@@ -68,7 +59,8 @@ class Download:
                                                                "proxy/activity-service/activity")
         self.download_service_rest_client = RestClient.inherit(self.modern_rest_client, "proxy/download-service/files")
         self.gc_config = GarminConnectConfigManager()
-        self.download_days_overlap = 3  # Existing donloaded data will be redownloaded and overwritten if it is within this number of days of now.
+        self.download_days_overlap = 3  # Existing downloaded data will be re-downloaded and overwritten if it is
+        # within this number of days of now.
 
     def __get_json(self, page_html, key):
         found = re.search(key + r" = (\{.*\});", page_html, re.M)
@@ -85,7 +77,6 @@ class Download:
             print("Missing config: need username and password. Edit GarminConnectConfig.json.")
             return
 
-        logger.debug("login: %s %s", username, password)
         get_headers = {
             'Referer': self.garmin_connect_login_url
         }
@@ -135,7 +126,6 @@ class Download:
         response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
         found = re.search(r"\?ticket=([\w-]*)", response.text, re.M)
         if not found:
-            logger.error("Login ticket not found (%d).", response.status_code)
             RestClient.save_binary_file('login_post.html', response)
             return False
         params = {
@@ -148,7 +138,6 @@ class Download:
         self.display_name = self.user_prefs['displayName']
         self.social_profile = self.__get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
         self.full_name = self.social_profile['fullName']
-        root_logger.info("login: %s (%s)", self.full_name, self.display_name)
         return True
 
     def __get_stat(self, stat_function, directory, date, days, overwite):
@@ -161,7 +150,6 @@ class Download:
             time.sleep(1)
 
     def __get_summary_day(self, directory_func, date, overwite=False):
-        root_logger.info("get_summary_day: %s", date)
         date_str = date.strftime('%Y-%m-%d')
         params = {
             'calendarDate': date_str,
@@ -210,33 +198,22 @@ class Download:
         response = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params=params)
         return response.json()
 
-    def __save_activity_details(self, directory, activity_id_str, overwite):
-        root_logger.debug("save_activity_details")
+    def __save_activity_details(self, directory, activity_id_str, overwrite):
         json_filename = f'{directory}/activity_details_{activity_id_str}'
-        try:
-            self.activity_service_rest_client.download_json_file(activity_id_str, json_filename, overwite)
-        except RestException as e:
-            root_logger.error("Exception getting daily summary %s", e)
+        self.activity_service_rest_client.download_json_file(activity_id_str, json_filename, overwrite)
 
     def __save_activity_file(self, activity_id_str):
-        root_logger.debug("save_activity_file: %s", activity_id_str)
         zip_filename = f'{self.temp_dir}/activity_{activity_id_str}.zip'
         url = f'activity/{activity_id_str}'
-        try:
-            self.download_service_rest_client.download_binary_file(url, zip_filename)
-        except RestException as e:
-            root_logger.error("Exception downloading activity file: %s", e)
+        self.download_service_rest_client.download_binary_file(url, zip_filename)
 
     def get_activities(self, directory, count, overwrite=False):
         """Download activities files from Garmin Connect and save the raw files."""
         activities = self.__get_activity_summaries(0, count)
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
-            activity_name_str = conversions.printable(activity['activityName'])
-            root_logger.info("get_activities: %s (%s)", activity_name_str, activity_id_str)
             json_filename = f'{directory}/activity_{activity_id_str}.json'
             if not os.path.isfile(json_filename) or overwrite:
-                root_logger.info("get_activities: %s <- %r", json_filename, activity)
                 self.__save_activity_details(directory, activity_id_str, overwrite)
                 self.modern_rest_client.save_json_to_file(json_filename, activity)
                 if not os.path.isfile(f'{directory}/{activity_id_str}.fit') or overwrite:
@@ -257,14 +234,10 @@ class Download:
             'nonSleepBufferMinutes': 60
         }
         url = f'{self.garmin_connect_sleep_daily_url}/{self.display_name}'
-        try:
-            self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
-        except RestException as e:
-            root_logger.error("Exception getting daily summary: %s", e)
+        self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
 
     def get_sleep(self, directory, date, days, overwite):
         """Download the sleep data from Garmin Connect and save to a JSON file."""
-        root_logger.info("Getting sleep: %s (%d)", date, days)
         self.__get_stat(self.__get_sleep_day, directory, date, days, overwite)
 
     def __get_rhr_day(self, directory, day, overwite=False):
@@ -276,26 +249,18 @@ class Download:
             'metricId': 60
         }
         url = f'{self.garmin_connect_rhr}/{self.display_name}'
-        try:
-            self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
-        except RestException as e:
-            root_logger.error("Exception getting daily summary %s", e)
+        self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
 
     def get_rhr(self, directory, date, days, overwite):
         """Download the resting heart rate data from Garmin Connect and save to a JSON file."""
-        root_logger.info("Getting rhr: %s (%d)", date, days)
         self.__get_stat(self.__get_rhr_day, directory, date, days, overwite)
 
     def __get_hydration_day(self, directory_func, day, overwite=False):
         date_str = day.strftime('%Y-%m-%d')
         json_filename = f'{directory_func(day.year)}/hydration_{date_str}'
         url = f'{self.garmin_connect_daily_hydration_url}/{date_str}'
-        try:
-            self.modern_rest_client.download_json_file(url, json_filename, overwite)
-        except RestException as e:
-            root_logger.error("Exception getting hydration: %s", e)
+        self.modern_rest_client.download_json_file(url, json_filename, overwite)
 
     def get_hydration(self, directory_func, date, days, overwite):
         """Download the hydration data from Garmin Connect and save to a JSON file."""
-        root_logger.info("Getting hydration: %s (%d)", date, days)
         self.__get_stat(self.__get_hydration_day, directory_func, date, days, overwite)
