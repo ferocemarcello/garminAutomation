@@ -119,18 +119,8 @@ class Download:
             'locationPromptShown': 'true',
             'showPassword': 'true'
         }
-        try:
-            response = self.sso_rest_client.get(self.garmin_connect_sso_login, get_headers, params)
-        except RestResponseException as e:
-            root_logger.error("Exception during login get: %s", e)
-            RestClient.save_binary_file('login_get.html', e.response)
-            return False
+        response = self.sso_rest_client.get(self.garmin_connect_sso_login, get_headers, params)
         found = re.search(r"name=\"_csrf\" value=\"(\w*)", response.text, re.M)
-        if not found:
-            logger.error("_csrf not found: %s", response.status_code)
-            RestClient.save_binary_file('login_get.html', response)
-            return False
-        logger.debug("_csrf found (%s).", found.group(1))
 
         data = {
             'username': username,
@@ -142,11 +132,7 @@ class Download:
             'Referer': response.url,
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-        try:
-            response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
-        except RestException as e:
-            root_logger.error("Exception during login post: %s", e)
-            return False
+        response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
         found = re.search(r"\?ticket=([\w-]*)", response.text, re.M)
         if not found:
             logger.error("Login ticket not found (%d).", response.status_code)
@@ -155,12 +141,7 @@ class Download:
         params = {
             'ticket': found.group(1)
         }
-        try:
-            response = self.modern_rest_client.get('', params=params)
-        except RestException:
-            logger.error("Login get homepage failed (%d).", response.status_code)
-            RestClient.save_binary_file('login_home.html', response)
-            return False
+        response = self.modern_rest_client.get('', params=params)
         self.user_prefs = self.__get_json(response.text, 'VIEWER_USERPREFERENCES')
         if profile_dir:
             self.modern_rest_client.save_json_to_file(f'{profile_dir}/profile.json', self.user_prefs)
@@ -256,7 +237,6 @@ class Download:
             "limit": str(count)
         }
         try:
-            # 'https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities'
             response = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params=params)
             return response.json()
         except RestException as e:
