@@ -119,38 +119,36 @@ def download_data():
     download.get_activity_types(activities_dir, False)
     download.get_activities(activities_dir, activity_count, False)
 
-    if Statistics.monitoring in stats:
-        date, days = __get_date_and_days(MonitoringDb(db_params_dict), latest, MonitoringHeartRate, MonitoringHeartRate.heart_rate, 'monitoring')
-        if days > 0:
-            root_logger.info("Date range to update: %s (%d) to %s", date, days, ConfigManager.get_monitoring_base_dir())
-            download.get_daily_summaries(ConfigManager.get_or_create_monitoring_dir, date, days, overwrite)
-            download.get_hydration(ConfigManager.get_or_create_monitoring_dir, date, days, overwrite)
-            download.get_monitoring(ConfigManager.get_or_create_monitoring_dir, date, days)
-            root_logger.info("Saved monitoring files for %s (%d) to %s for processing", date, days, ConfigManager.get_monitoring_base_dir())
 
-    if Statistics.sleep in stats:
-        date, days = __get_date_and_days(GarminDb(db_params_dict), latest, Sleep, Sleep.total_sleep, 'sleep')
-        if days > 0:
-            sleep_dir = ConfigManager.get_or_create_sleep_dir()
-            root_logger.info("Date range to update: %s (%d) to %s", date, days, sleep_dir)
-            download.get_sleep(sleep_dir, date, days, overwrite)
-            root_logger.info("Saved sleep files for %s (%d) to %s for processing", date, days, sleep_dir)
+    date, days = __get_date_and_days(MonitoringDb(db_params_dict), False, MonitoringHeartRate, MonitoringHeartRate.heart_rate, 'monitoring')
+    if days > 0:
+        root_logger.info("Date range to update: %s (%d) to %s", date, days, ConfigManager.get_monitoring_base_dir())
+        download.get_daily_summaries(ConfigManager.get_or_create_monitoring_dir, date, days, False)
+        download.get_hydration(ConfigManager.get_or_create_monitoring_dir, date, days, False)
+        download.get_monitoring(ConfigManager.get_or_create_monitoring_dir, date, days)
+        root_logger.info("Saved monitoring files for %s (%d) to %s for processing", date, days, ConfigManager.get_monitoring_base_dir())
 
-    if Statistics.weight in stats:
-        date, days = __get_date_and_days(GarminDb(db_params_dict), latest, Weight, Weight.weight, 'weight')
-        if days > 0:
-            weight_dir = ConfigManager.get_or_create_weight_dir()
-            root_logger.info("Date range to update: %s (%d) to %s", date, days, weight_dir)
-            download.get_weight(weight_dir, date, days, overwrite)
-            root_logger.info("Saved weight files for %s (%d) to %s for processing", date, days, weight_dir)
 
-    if Statistics.rhr in stats:
-        date, days = __get_date_and_days(GarminDb(db_params_dict), latest, RestingHeartRate, RestingHeartRate.resting_heart_rate, 'rhr')
-        if days > 0:
-            rhr_dir = ConfigManager.get_or_create_rhr_dir()
-            root_logger.info("Date range to update: %s (%d) to %s", date, days, rhr_dir)
-            download.get_rhr(rhr_dir, date, days, overwrite)
-            root_logger.info("Saved rhr files for %s (%d) to %s for processing", date, days, rhr_dir)
+    date, days = __get_date_and_days(GarminDb(db_params_dict), False, Sleep, Sleep.total_sleep, 'sleep')
+    if days > 0:
+        sleep_dir = ConfigManager.get_or_create_sleep_dir()
+        root_logger.info("Date range to update: %s (%d) to %s", date, days, sleep_dir)
+        download.get_sleep(sleep_dir, date, days, False)
+        root_logger.info("Saved sleep files for %s (%d) to %s for processing", date, days, sleep_dir)
+
+    date, days = __get_date_and_days(GarminDb(db_params_dict), False, Weight, Weight.weight, 'weight')
+    if days > 0:
+        weight_dir = ConfigManager.get_or_create_weight_dir()
+        root_logger.info("Date range to update: %s (%d) to %s", date, days, weight_dir)
+        download.get_weight(weight_dir, date, days, False)
+        root_logger.info("Saved weight files for %s (%d) to %s for processing", date, days, weight_dir)
+
+    date, days = __get_date_and_days(GarminDb(db_params_dict), False, RestingHeartRate, RestingHeartRate.resting_heart_rate, 'rhr')
+    if days > 0:
+        rhr_dir = ConfigManager.get_or_create_rhr_dir()
+        root_logger.info("Date range to update: %s (%d) to %s", date, days, rhr_dir)
+        download.get_rhr(rhr_dir, date, days, False)
+        root_logger.info("Saved rhr files for %s (%d) to %s for processing", date, days, rhr_dir)
 
 
 def import_data(debug, latest, stats):

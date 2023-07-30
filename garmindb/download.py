@@ -281,8 +281,6 @@ class Download():
 
     def get_activities(self, directory, count, overwite=False):
         """Download activities files from Garmin Connect and save the raw files."""
-        self.temp_dir = tempfile.mkdtemp()
-        logger.info("Getting activities: '%s' (%d) temp %s", directory, count, self.temp_dir)
         activities = self.__get_activity_summaries(0, count)
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
@@ -297,7 +295,6 @@ class Download():
                     self.__save_activity_file(activity_id_str)
                 # pause for a second between every page access
                 time.sleep(1)
-        self.__unzip_files(directory)
 
     def get_activity_types(self, directory, overwite):
         """Download the activity types from Garmin Connect and save to a JSON file."""
