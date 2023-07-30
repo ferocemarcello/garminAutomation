@@ -104,8 +104,9 @@ def copy_data(overwite, latest, stats):
         copy.copy_sleep(monitoring_dir, latest)
 
 
-def download_data(overwite, latest, stats):
-    """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously downloaded data if indicated."""
+def download_data(overwrite, latest, stats):
+    """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
+    downloaded data if indicated."""
     logger.info("___Downloading %s Data___", 'Latest' if latest else 'All')
 
     download = Download()
@@ -120,15 +121,15 @@ def download_data(overwite, latest, stats):
             activity_count = gc_config.all_activity_count()
         activities_dir = ConfigManager.get_or_create_activities_dir()
         root_logger.info("Fetching %d activities to %s", activity_count, activities_dir)
-        download.get_activity_types(activities_dir, overwite)
-        download.get_activities(activities_dir, activity_count, overwite)
+        download.get_activity_types(activities_dir, overwrite)
+        download.get_activities(activities_dir, activity_count, overwrite)
 
     if Statistics.monitoring in stats:
         date, days = __get_date_and_days(MonitoringDb(db_params_dict), latest, MonitoringHeartRate, MonitoringHeartRate.heart_rate, 'monitoring')
         if days > 0:
             root_logger.info("Date range to update: %s (%d) to %s", date, days, ConfigManager.get_monitoring_base_dir())
-            download.get_daily_summaries(ConfigManager.get_or_create_monitoring_dir, date, days, overwite)
-            download.get_hydration(ConfigManager.get_or_create_monitoring_dir, date, days, overwite)
+            download.get_daily_summaries(ConfigManager.get_or_create_monitoring_dir, date, days, overwrite)
+            download.get_hydration(ConfigManager.get_or_create_monitoring_dir, date, days, overwrite)
             download.get_monitoring(ConfigManager.get_or_create_monitoring_dir, date, days)
             root_logger.info("Saved monitoring files for %s (%d) to %s for processing", date, days, ConfigManager.get_monitoring_base_dir())
 
@@ -137,7 +138,7 @@ def download_data(overwite, latest, stats):
         if days > 0:
             sleep_dir = ConfigManager.get_or_create_sleep_dir()
             root_logger.info("Date range to update: %s (%d) to %s", date, days, sleep_dir)
-            download.get_sleep(sleep_dir, date, days, overwite)
+            download.get_sleep(sleep_dir, date, days, overwrite)
             root_logger.info("Saved sleep files for %s (%d) to %s for processing", date, days, sleep_dir)
 
     if Statistics.weight in stats:
@@ -145,7 +146,7 @@ def download_data(overwite, latest, stats):
         if days > 0:
             weight_dir = ConfigManager.get_or_create_weight_dir()
             root_logger.info("Date range to update: %s (%d) to %s", date, days, weight_dir)
-            download.get_weight(weight_dir, date, days, overwite)
+            download.get_weight(weight_dir, date, days, overwrite)
             root_logger.info("Saved weight files for %s (%d) to %s for processing", date, days, weight_dir)
 
     if Statistics.rhr in stats:
@@ -153,7 +154,7 @@ def download_data(overwite, latest, stats):
         if days > 0:
             rhr_dir = ConfigManager.get_or_create_rhr_dir()
             root_logger.info("Date range to update: %s (%d) to %s", date, days, rhr_dir)
-            download.get_rhr(rhr_dir, date, days, overwite)
+            download.get_rhr(rhr_dir, date, days, overwrite)
             root_logger.info("Saved rhr files for %s (%d) to %s for processing", date, days, rhr_dir)
 
 
@@ -311,48 +312,7 @@ def main(argv):
                                  action="store_true", default=False)
     args = parser.parse_args()
 
-    log_version(sys.argv[0])
-
-    if args.trace > 0:
-        root_logger.setLevel(logging.DEBUG)
-    else:
-        root_logger.setLevel(logging.INFO)
-
-    root_logger.info("Enabled statistics: %r", args.stats)
-
-    if args.backup_dbs:
-        backup_dbs()
-        
-    if args.delete_db:
-        delete_dbs([stats_to_db_map[stat] for stat in args.stats] + summary_dbs)
-        sys.exit()
-
-    if args.rebuild_db:
-        delete_dbs([stats_to_db_map[stat] for stat in gc_config.enabled_stats()] + summary_dbs)
-        import_data(args.trace, args.latest, gc_config.enabled_stats())
-        analyze_data(args.trace)
-
-    if args.copy_data:
-        copy_data(args.overwrite, args.latest, args.stats)
-
-    if args.download_data:
-        download_data(args.overwrite, args.latest, args.stats)
-
-    if args.import_data:
-        import_data(args.trace, args.latest, args.stats)
-
-    if args.analyze_data:
-        analyze_data(args.trace)
-
-    if args.export_activity:
-        export_activity(args.trace, os.getcwd(), args.export_activity)
-
-    if args.basecamp_activity:
-        basecamp_activity(args.trace, args.basecamp_activity)
-
-    if args.google_earth_activity:
-        google_earth_activity(args.trace, args.google_earth_activity)
-
+    download_data(args.overwrite, args.latest, args.stats)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
