@@ -189,14 +189,14 @@ class Download:
         """Download the sleep data from Garmin Connect and save to a JSON file."""
         self.__get_stat(self.__get_weight_day, directory, date, days, overwrite)
 
-    def get_activities(self, count):
+    def get_activities(self, count, start_date, end_date):
         all_activities = dict()
         """Download activities files from Garmin Connect"""
         activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
             'start': str(0),
             "limit": str(count),
-            "startDate": "2023-07-31",
-            "endDate": "2023-08-1"
+            "startDate": start_date,
+            "endDate": end_date
         }).json()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])

@@ -102,7 +102,7 @@ def download_data():
     activities_dir = ConfigManager.get_or_create_activities_dir()
     root_logger.info("Fetching %d activities to %s", activity_count, activities_dir)
     download.get_activity_types(activities_dir, False)
-    download.get_activities(count=activity_count)
+    download.get_activities(count=activity_count, start_date="2023-07-31", end_date="2023-08-01")
 
     date, days = __get_date_and_days(MonitoringDb(db_params_dict), False, MonitoringHeartRate,
                                      MonitoringHeartRate.heart_rate, 'monitoring')
