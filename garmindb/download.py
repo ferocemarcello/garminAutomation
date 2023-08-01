@@ -136,41 +136,41 @@ class Download:
         self.full_name = self.social_profile['fullName']
         return True
 
-    def __get_stat(self, stat_function, directory, date, days, overwite):
+    def __get_stat(self, stat_function, directory, date, days, overwrite):
         for day in tqdm(range(0, days), unit='days'):
             download_date = date + datetime.timedelta(days=day)
-            # always overwrite for yesterday and today since the last download may have been a partial result
-            delta = datetime.datetime.now().date() - download_date
-            stat_function(directory, download_date, overwite or delta.days <= self.download_days_overlap)
+            stat_function(directory, download_date, overwrite)
             # pause for a second between every page access
             time.sleep(1)
 
-    def __get_summary_day(self, directory_func, date, overwrite=False):
+    def get_stat_day(self, date, stat_function):
         date_str = date.strftime('%Y-%m-%d')
         params = {
             'calendarDate': date_str,
             '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
         }
-        url = f'{self.garmin_connect_daily_summary_url}/{self.display_name}'
-        json_filename = f'{directory_func(date.year)}/daily_summary_{date_str}'
-        self.modern_rest_client.download_json_file(url, json_filename, overwrite, params)
+        return stat_function(date=date, params=params)
 
-    def get_daily_summaries(self, directory_func, date, days, overwrite):
-        """Download the daily summary data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_summary_day, directory_func, date, days, overwrite)
-
-    def __get_monitoring_day(self, date):
-        zip_filename = f'{self.temp_dir}/{date}.zip'
-        url = f'wellness/{date.strftime("%Y-%m-%d")}'
-        self.download_service_rest_client.download_binary_file(url, zip_filename)
-
-    def get_monitoring(self, directory_func, date, days):
-        """Download the daily monitoring data from Garmin Connect, unzip and save the raw files."""
-        for day in tqdm(range(0, days + 1), unit='days'):
-            day_date = date + datetime.timedelta(day)
-            self.__get_monitoring_day(day_date)
+    def get_daily_stats(self, date, days, stat_function):
+        daily_stats = list()
+        for day in tqdm(range(0, days), unit='days'):
+            download_date = date + datetime.timedelta(days=day)
+            daily_stats.append(self.get_stat_day(date=download_date, stat_function=stat_function))
             # pause for a second between every page access
             time.sleep(1)
+        return daily_stats
+
+    def get_summary_day(self, date: str, params):
+        url = f'{self.garmin_connect_daily_summary_url}/{self.display_name}'
+        return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
+
+    def get_hydration_day(self, date: str, params):
+        url = f'{self.garmin_connect_daily_hydration_url}/{date}'
+        return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
+
+    def get_monitoring_day(self, date: str, params):
+        url = f'wellness/{date}'
+        return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
 
     def __get_weight_day(self, directory, day, overwite=False):
         date_str = day.strftime('%Y-%m-%d')
@@ -182,22 +182,23 @@ class Download:
         json_filename = f'{directory}/weight_{date_str}'
         self.modern_rest_client.download_json_file(self.garmin_connect_weight_url, json_filename, overwite, params)
 
-    def get_weight(self, directory, date, days, overwrite):
+    def get_weight(self, directory, date, days, overwrite=True):
         """Download the sleep data from Garmin Connect and save to a JSON file."""
         self.__get_stat(self.__get_weight_day, directory, date, days, overwrite)
 
-    def get_activities(self, count, start_date, end_date):
+    def get_activities(self, count, start_date: datetime.date, end_date: datetime.date):
         """Download activities files from Garmin Connect"""
         activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
             'start': str(0),
             "limit": str(count),
-            "startDate": start_date,
-            "endDate": end_date
+            "startDate": start_date.isoformat(),
+            "endDate": end_date.isoformat()
         }).json()
         all_activities = dict()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
-            activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None, ignore_errors=None).json()
+            activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None,
+                                                                     ignore_errors=None).json()
             all_activities.__setitem__(activity_id_str, activity_details)
             # pause for a second between every page access
             time.sleep(1)
@@ -216,9 +217,9 @@ class Download:
         url = f'{self.garmin_connect_sleep_daily_url}/{self.display_name}'
         self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
 
-    def get_sleep(self, directory, date, days, overwite):
+    def get_sleep(self, directory, date, days, overwrite=True):
         """Download the sleep data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_sleep_day, directory, date, days, overwite)
+        self.__get_stat(self.__get_sleep_day, directory, date, days, overwrite)
 
     def __get_rhr_day(self, directory, day, overwrite=False):
         date_str = day.strftime('%Y-%m-%d')
@@ -234,13 +235,3 @@ class Download:
     def get_rhr(self, directory, date, days, overwite):
         """Download the resting heart rate data from Garmin Connect and save to a JSON file."""
         self.__get_stat(self.__get_rhr_day, directory, date, days, overwite)
-
-    def __get_hydration_day(self, directory_func, day, overwite=False):
-        date_str = day.strftime('%Y-%m-%d')
-        json_filename = f'{directory_func(day.year)}/hydration_{date_str}'
-        url = f'{self.garmin_connect_daily_hydration_url}/{date_str}'
-        self.modern_rest_client.download_json_file(url, json_filename, overwite)
-
-    def get_hydration(self, directory_func, date, days, overwite):
-        """Download the hydration data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_hydration_day, directory_func, date, days, overwite)

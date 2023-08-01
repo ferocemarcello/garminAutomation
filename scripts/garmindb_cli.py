@@ -17,8 +17,7 @@ import sys
 from garmindb import ConfigManager, GarminConnectConfigManager, PluginManager
 from garmindb import Download, Copy
 from garmindb import Statistics
-from garmindb.garmindb import GarminDb, Sleep, Weight, RestingHeartRate, MonitoringDb, MonitoringHeartRate, \
-    ActivitiesDb, GarminSummaryDb
+from garmindb.garmindb import GarminDb, RestingHeartRate, MonitoringDb, ActivitiesDb, GarminSummaryDb
 from garmindb.summarydb import SummaryDb
 
 logging.basicConfig(filename='garmindb.log', filemode='w', level=logging.INFO)
@@ -48,18 +47,14 @@ def __get_date_and_days(db, latest, table, col, stat_name):
         last_ts = table.latest_time(db, col)
         if last_ts is None:
             date, days = gc_config.stat_start_date(stat_name)
-            logger.info("Recent %s data not found, using: %s : %s", stat_name, date, days)
         else:
             # start from the day before the last day in the DB
-            logger.info("Downloading latest %s data from: %s", stat_name, last_ts)
             date = last_ts.date() if isinstance(last_ts, datetime.datetime) else last_ts
             days = max((datetime.date.today() - date).days, 1)
     else:
         date, days = gc_config.stat_start_date(stat_name)
         days = min((datetime.date.today() - date).days, days)
-        logger.info("Downloading all %s data from: %s [%d]", stat_name, date, days)
     if date is None or days is None:
-        logger.error("Missing config: need %s_start_date and download_days. Edit GarminConnectConfig.py.", stat_name)
         sys.exit()
     return date, days
 
@@ -89,33 +84,25 @@ def copy_data(latest, stats):
         copy.copy_sleep(monitoring_dir, latest)
 
 
-def download_data(downloader: Download, activity_count=100, start_date="2023-07-31", end_date="2023-08-01"):
+def download_data(downloader: Download, activity_count, start_date: datetime.date, end_date:datetime.date):
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
     downloaded data if indicated."""
 
-    activity_types = downloader.get_activity_types()
-    activities = downloader.get_activities(count=activity_count, start_date=start_date, end_date=end_date).json()
+    '''activity_types = downloader.get_activity_types()
+    activities = downloader.get_activities(count=activity_count, start_date=start_date, end_date=end_date)
+    '''
+    daily_summaries = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_summary_day)
+    hydration_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_hydration_day)
+    monitoring_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_monitoring_day)
+    sleep_dir = ConfigManager.get_or_create_sleep_dir()
+    downloader.get_sleep(sleep_dir, date=start_date, days=5)
 
-    date, days = __get_date_and_days(MonitoringDb(db_params_dict), False, MonitoringHeartRate,
-                                     MonitoringHeartRate.heart_rate, 'monitoring')
-    if days > 0:
-        downloader.get_daily_summaries(ConfigManager.get_or_create_monitoring_dir, date, days, False)
-        downloader.get_hydration(ConfigManager.get_or_create_monitoring_dir, date, days, False)
-        downloader.get_monitoring(ConfigManager.get_or_create_monitoring_dir, date, days)
-
-    date, days = __get_date_and_days(GarminDb(db_params_dict), False, Sleep, Sleep.total_sleep, 'sleep')
-    if days > 0:
-        sleep_dir = ConfigManager.get_or_create_sleep_dir()
-        downloader.get_sleep(sleep_dir, date, days, False)
-    date, days = __get_date_and_days(GarminDb(db_params_dict), False, Weight, Weight.weight, 'weight')
-    if days > 0:
-        weight_dir = ConfigManager.get_or_create_weight_dir()
-        downloader.get_weight(weight_dir, date, days, False)
+    weight_dir = ConfigManager.get_or_create_weight_dir()
+    downloader.get_weight(weight_dir, date=start_date, days=5)
     date, days = __get_date_and_days(GarminDb(db_params_dict), False, RestingHeartRate,
                                      RestingHeartRate.resting_heart_rate, 'rhr')
-    if days > 0:
-        rhr_dir = ConfigManager.get_or_create_rhr_dir()
-        downloader.get_rhr(rhr_dir, date, days, False)
+    rhr_dir = ConfigManager.get_or_create_rhr_dir()
+    downloader.get_rhr(rhr_dir, date, days, False)
 
 
 def main(username=None, password=None):
@@ -126,8 +113,8 @@ def main(username=None, password=None):
     if not download_instance.login(username, password):
         logger.error("Failed to login!")
         sys.exit()
-    download_data(downloader=download_instance, activity_count=100, start_date="2023-07-31", end_date="2023-08-01")
+    download_data(downloader=download_instance, activity_count=100, start_date=datetime.date.fromisoformat("2023-07-30"), end_date=datetime.date.fromisoformat("2023-08-01"))
 
 
 if __name__ == "__main__":
-    main(username="ferocemarcello@gmail.com", password="894U%rS7bAt8VV*9r")
+    main(username="ferocemarcello@gmail.com", password="")
