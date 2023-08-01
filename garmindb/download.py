@@ -190,7 +190,6 @@ class Download:
         self.__get_stat(self.__get_weight_day, directory, date, days, overwrite)
 
     def get_activities(self, count, start_date, end_date):
-        all_activities = dict()
         """Download activities files from Garmin Connect"""
         activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
             'start': str(0),
@@ -198,6 +197,7 @@ class Download:
             "startDate": start_date,
             "endDate": end_date
         }).json()
+        all_activities = dict()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
             activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None, ignore_errors=None)
@@ -207,10 +207,8 @@ class Download:
         return activity_details
 
     def get_activity_types(self, directory, overwrite):
-        """Download the activity types from Garmin Connect and save to a JSON file."""
-        json_filename = f'{directory}/activity_types'
-        activity_types = self.activity_service_rest_client.download_json_file('activityTypes', json_filename, overwrite)
-        return activity_types
+        """Download the activity types from Garmin Connect"""
+        return self.activity_service_rest_client.get(leaf_route='activityTypes', params=None, ignore_errors=None).json()
 
     def __get_sleep_day(self, directory, date, overwite=False):
         json_filename = f'{directory}/sleep_{date}'
