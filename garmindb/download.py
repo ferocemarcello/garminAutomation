@@ -194,7 +194,9 @@ class Download:
         """Download activities files from Garmin Connect"""
         activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
             'start': str(0),
-            "limit": str(count)
+            "limit": str(count),
+            "startDate": "2023-07-31",
+            "endDate": "2023-08-1"
         }).json()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
