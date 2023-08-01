@@ -50,6 +50,10 @@ class Download:
 
     def __init__(self):
         """Create a new Download class instance."""
+        self.social_profile = None
+        self.user_prefs = None
+        self.full_name = None
+        self.display_name = None
         self.session = cloudscraper.CloudScraper()
         self.sso_rest_client = RestClient(self.session, 'sso.garmin.com', 'sso', aditional_headers=self.garmin_headers)
         self.modern_rest_client = RestClient(self.session, 'connect.garmin.com', 'modern',
@@ -69,7 +73,6 @@ class Download:
 
     def login(self, username, password):
         """Login to Garmin Connect."""
-        profile_dir = ConfigManager.get_or_create_fit_files_dir()
         username = username
         password = password
         if not username or not password:
@@ -123,16 +126,11 @@ class Download:
         }
         response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
         found = re.search(r"\?ticket=([\w-]*)", response.text, re.M)
-        if not found:
-            RestClient.save_binary_file('login_post.html', response)
-            return False
         params = {
             'ticket': found.group(1)
         }
         response = self.modern_rest_client.get('', params=params)
         self.user_prefs = self.__get_json(response.text, 'VIEWER_USERPREFERENCES')
-        if profile_dir:
-            self.modern_rest_client.save_json_to_file(f'{profile_dir}/profile.json', self.user_prefs)
         self.display_name = self.user_prefs['displayName']
         self.social_profile = self.__get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
         self.full_name = self.social_profile['fullName']
@@ -147,7 +145,7 @@ class Download:
             # pause for a second between every page access
             time.sleep(1)
 
-    def __get_summary_day(self, directory_func, date, overwite=False):
+    def __get_summary_day(self, directory_func, date, overwrite=False):
         date_str = date.strftime('%Y-%m-%d')
         params = {
             'calendarDate': date_str,
@@ -155,11 +153,11 @@ class Download:
         }
         url = f'{self.garmin_connect_daily_summary_url}/{self.display_name}'
         json_filename = f'{directory_func(date.year)}/daily_summary_{date_str}'
-        self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
+        self.modern_rest_client.download_json_file(url, json_filename, overwrite, params)
 
-    def get_daily_summaries(self, directory_func, date, days, overwite):
+    def get_daily_summaries(self, directory_func, date, days, overwrite):
         """Download the daily summary data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_summary_day, directory_func, date, days, overwite)
+        self.__get_stat(self.__get_summary_day, directory_func, date, days, overwrite)
 
     def __get_monitoring_day(self, date):
         zip_filename = f'{self.temp_dir}/{date}.zip'
