@@ -67,14 +67,13 @@ class Download:
             json_text = found.group(1).replace('\\"', '"')
             return json.loads(json_text)
 
-    def login(self):
+    def login(self, username, password):
         """Login to Garmin Connect."""
         profile_dir = ConfigManager.get_or_create_fit_files_dir()
-        username = self.gc_config.get_user()
-        password = self.gc_config.get_password()
+        username = username
+        password = password
         if not username or not password:
-            print("Missing config: need username and password. Edit GarminConnectConfig.json.")
-            return
+            return False
 
         get_headers = {
             'Referer': self.garmin_connect_login_url
@@ -200,13 +199,13 @@ class Download:
         all_activities = dict()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
-            activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None, ignore_errors=None)
+            activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None, ignore_errors=None).json()
             all_activities.__setitem__(activity_id_str, activity_details)
             # pause for a second between every page access
             time.sleep(1)
-        return activity_details
+        return all_activities
 
-    def get_activity_types(self, directory, overwrite):
+    def get_activity_types(self):
         """Download the activity types from Garmin Connect"""
         return self.activity_service_rest_client.get(leaf_route='activityTypes', params=None, ignore_errors=None).json()
 
