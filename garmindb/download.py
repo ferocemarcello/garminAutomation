@@ -6,7 +6,6 @@ __license__ = "GPL"
 
 import datetime
 import json
-import os
 import re
 import time
 
@@ -190,36 +189,20 @@ class Download:
         """Download the sleep data from Garmin Connect and save to a JSON file."""
         self.__get_stat(self.__get_weight_day, directory, date, days, overwrite)
 
-    def __get_activity_summaries(self, start, count):
-        params = {
-            'start': str(start),
+    def get_activities(self, count):
+        all_activities = dict()
+        """Download activities files from Garmin Connect"""
+        activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
+            'start': str(0),
             "limit": str(count)
-        }
-        response = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params=params)
-        return response.json()
-
-    def __save_activity_details(self, directory, activity_id_str, overwrite):
-        json_filename = f'{directory}/activity_details_{activity_id_str}'
-        self.activity_service_rest_client.download_json_file(activity_id_str, json_filename, overwrite)
-
-    def __save_activity_file(self, activity_id_str):
-        zip_filename = f'{self.temp_dir}/activity_{activity_id_str}.zip'
-        url = f'activity/{activity_id_str}'
-        self.download_service_rest_client.download_binary_file(url, zip_filename)
-
-    def get_activities(self, directory, count, overwrite=False):
-        """Download activities files from Garmin Connect and save the raw files."""
-        activities = self.__get_activity_summaries(0, count)
+        }).json()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
-            json_filename = f'{directory}/activity_{activity_id_str}.json'
-            if not os.path.isfile(json_filename) or overwrite:
-                self.__save_activity_details(directory, activity_id_str, overwrite)
-                self.modern_rest_client.save_json_to_file(json_filename, activity)
-                if not os.path.isfile(f'{directory}/{activity_id_str}.fit') or overwrite:
-                    self.__save_activity_file(activity_id_str)
-                # pause for a second between every page access
-                time.sleep(1)
+            activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None, ignore_errors=None)
+            all_activities.__setitem__(activity_id_str, activity_details)
+            # pause for a second between every page access
+            time.sleep(1)
+        return activity_details
 
     def get_activity_types(self, directory, overwrite):
         """Download the activity types from Garmin Connect and save to a JSON file."""
@@ -240,7 +223,7 @@ class Download:
         """Download the sleep data from Garmin Connect and save to a JSON file."""
         self.__get_stat(self.__get_sleep_day, directory, date, days, overwite)
 
-    def __get_rhr_day(self, directory, day, overwite=False):
+    def __get_rhr_day(self, directory, day, overwrite=False):
         date_str = day.strftime('%Y-%m-%d')
         json_filename = f'{directory}/rhr_{date_str}'
         params = {
@@ -249,7 +232,7 @@ class Download:
             'metricId': 60
         }
         url = f'{self.garmin_connect_rhr}/{self.display_name}'
-        self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
+        self.modern_rest_client.download_json_file(url, json_filename, overwrite, params)
 
     def get_rhr(self, directory, date, days, overwite):
         """Download the resting heart rate data from Garmin Connect and save to a JSON file."""
