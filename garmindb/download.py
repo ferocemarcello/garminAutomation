@@ -168,11 +168,7 @@ class Download:
         url = f'{self.garmin_connect_daily_hydration_url}/{date}'
         return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
 
-    def get_monitoring_day(self, date: str, params):
-        url = f'wellness/{date}'
-        return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
-
-    def __get_weight_day(self, directory, day, overwite=False):
+    def __get_weight_day(self, directory, day, overwrite=False):
         date_str = day.strftime('%Y-%m-%d')
         params = {
             'startDate': date_str,
@@ -180,7 +176,7 @@ class Download:
             '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(day)))
         }
         json_filename = f'{directory}/weight_{date_str}'
-        self.modern_rest_client.download_json_file(self.garmin_connect_weight_url, json_filename, overwite, params)
+        self.modern_rest_client.download_json_file(self.garmin_connect_weight_url, json_filename, overwrite, params)
 
     def get_weight(self, directory, date, days, overwrite=True):
         """Download the sleep data from Garmin Connect and save to a JSON file."""

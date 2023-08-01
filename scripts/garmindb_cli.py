@@ -29,19 +29,6 @@ gc_config = GarminConnectConfigManager()
 db_params_dict = ConfigManager.get_db_params()
 plugin_manager = PluginManager(ConfigManager.get_or_create_plugins_dir(), db_params_dict)
 
-stats_to_db_map = {
-    Statistics.monitoring: MonitoringDb,
-    Statistics.steps: MonitoringDb,
-    Statistics.itime: MonitoringDb,
-    Statistics.sleep: GarminDb,
-    Statistics.rhr: GarminDb,
-    Statistics.weight: GarminDb,
-    Statistics.activities: ActivitiesDb
-}
-
-summary_dbs = [GarminSummaryDb, SummaryDb]
-
-
 def __get_date_and_days(db, latest, table, col, stat_name):
     if latest:
         last_ts = table.latest_time(db, col)
@@ -59,40 +46,16 @@ def __get_date_and_days(db, latest, table, col, stat_name):
     return date, days
 
 
-def copy_data(latest, stats):
-    """Copy data from a mounted Garmin USB device to files."""
-    logger.info("___Copying Data___")
-    copy = Copy(gc_config.device_mount_dir())
-
-    settings_dir = ConfigManager.get_or_create_fit_files_dir()
-    root_logger.info("Copying settings to %s", settings_dir)
-    copy.copy_settings(settings_dir)
-
-    if Statistics.activities in stats:
-        activities_dir = ConfigManager.get_or_create_activities_dir()
-        root_logger.info("Copying activities to %s", activities_dir)
-        copy.copy_activities(activities_dir, latest)
-
-    if Statistics.monitoring in stats:
-        monitoring_dir = ConfigManager.get_or_create_monitoring_dir(datetime.datetime.now().year)
-        root_logger.info("Copying monitoring to %s", monitoring_dir)
-        copy.copy_monitoring(monitoring_dir, latest)
-
-    if Statistics.sleep in stats:
-        monitoring_dir = ConfigManager.get_or_create_monitoring_dir(datetime.datetime.now().year)
-        root_logger.info("Copying sleep to %s", monitoring_dir)
-        copy.copy_sleep(monitoring_dir, latest)
-
-
 def download_data(downloader: Download, activity_count, start_date: datetime.date, end_date:datetime.date):
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
     downloaded data if indicated."""
 
     '''activity_types = downloader.get_activity_types()
     activities = downloader.get_activities(count=activity_count, start_date=start_date, end_date=end_date)
-    '''
+    
     daily_summaries = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_summary_day)
     hydration_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_hydration_day)
+    '''
     monitoring_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_monitoring_day)
     sleep_dir = ConfigManager.get_or_create_sleep_dir()
     downloader.get_sleep(sleep_dir, date=start_date, days=5)
