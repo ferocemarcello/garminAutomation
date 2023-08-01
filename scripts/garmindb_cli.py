@@ -89,7 +89,7 @@ def copy_data(latest, stats):
         copy.copy_sleep(monitoring_dir, latest)
 
 
-def download_data():
+def download_data(activity_count=100, start_date="2023-07-31", end_date="2023-08-01"):
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
     downloaded data if indicated."""
 
@@ -98,11 +98,9 @@ def download_data():
         logger.error("Failed to login!")
         sys.exit()
 
-    activity_count = gc_config.all_activity_count()
     activities_dir = ConfigManager.get_or_create_activities_dir()
-    root_logger.info("Fetching %d activities to %s", activity_count, activities_dir)
     activity_types = download.get_activity_types(activities_dir, False)
-    activities = download.get_activities(count=activity_count, start_date="2023-07-31", end_date="2023-08-01")
+    activities = download.get_activities(count=activity_count, start_date=start_date, end_date=end_date)
 
     date, days = __get_date_and_days(MonitoringDb(db_params_dict), False, MonitoringHeartRate,
                                      MonitoringHeartRate.heart_rate, 'monitoring')
@@ -125,8 +123,9 @@ def download_data():
         rhr_dir = ConfigManager.get_or_create_rhr_dir()
         download.get_rhr(rhr_dir, date, days, False)
 
+
 def main():
-    download_data()
+    download_data(activity_count=100, start_date="2023-07-31", end_date="2023-08-01")
 
 
 if __name__ == "__main__":
