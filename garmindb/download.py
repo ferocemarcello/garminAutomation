@@ -18,6 +18,10 @@ from .config_manager import ConfigManager
 from .garmin_connect_config_manager import GarminConnectConfigManager
 
 
+def get_static_url_params(url: str, params: dict):
+    return url, params
+
+
 class Download:
     """Class for downloading health data from Garmin Connect."""
 
@@ -143,30 +147,27 @@ class Download:
             # pause for a second between every page access
             time.sleep(1)
 
-    def get_stat_day(self, date, stat_function):
-        date_str = date.strftime('%Y-%m-%d')
-        params = {
-            'calendarDate': date_str,
-            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
-        }
-        return stat_function(date=date, params=params)
-
-    def get_daily_stats(self, date, days, stat_function):
+    def get_daily_stats(self, date, days, url_param_function):
         daily_stats = list()
         for day in tqdm(range(0, days), unit='days'):
             download_date = date + datetime.timedelta(days=day)
-            daily_stats.append(self.get_stat_day(date=download_date, stat_function=stat_function))
+            static_url, static_params = url_param_function(download_date)
+            daily_stats.append(self.modern_rest_client.get(leaf_route=static_url, params=static_params).json())
             # pause for a second between every page access
             time.sleep(1)
         return daily_stats
 
-    def get_summary_day(self, date: str, params):
+    def url_param_summary_day(self, date: datetime.date):
         url = f'{self.garmin_connect_daily_summary_url}/{self.display_name}'
-        return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
+        params = {
+            'calendarDate': date.strftime('%Y-%m-%d'),
+            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
+        }
+        return url, params
 
-    def get_hydration_day(self, date: str, params):
-        url = f'{self.garmin_connect_daily_hydration_url}/{date}'
-        return self.modern_rest_client.get(url, params=params, ignore_errors=None).json()
+    def url_param_hydration_day(self, date: datetime.date):
+        url = f"{self.garmin_connect_daily_hydration_url}/{date.strftime('%Y-%m-%d')}"
+        return url, None
 
     def __get_weight_day(self, directory, day, overwrite=False):
         date_str = day.strftime('%Y-%m-%d')

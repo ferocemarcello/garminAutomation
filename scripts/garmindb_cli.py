@@ -13,7 +13,7 @@ __license__ = "GPL"
 import datetime
 import logging
 import sys
-
+import fitfile.conversions as conversions
 from garmindb import ConfigManager, GarminConnectConfigManager, PluginManager
 from garmindb import Download, Copy
 from garmindb import Statistics
@@ -28,6 +28,7 @@ root_logger = logging.getLogger()
 gc_config = GarminConnectConfigManager()
 db_params_dict = ConfigManager.get_db_params()
 plugin_manager = PluginManager(ConfigManager.get_or_create_plugins_dir(), db_params_dict)
+
 
 def __get_date_and_days(db, latest, table, col, stat_name):
     if latest:
@@ -46,17 +47,16 @@ def __get_date_and_days(db, latest, table, col, stat_name):
     return date, days
 
 
-def download_data(downloader: Download, activity_count, start_date: datetime.date, end_date:datetime.date):
+def download_data(downloader: Download, activity_count, start_date: datetime.date, end_date: datetime.date):
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
     downloaded data if indicated."""
 
     '''activity_types = downloader.get_activity_types()
     activities = downloader.get_activities(count=activity_count, start_date=start_date, end_date=end_date)
-    
-    daily_summaries = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_summary_day)
-    hydration_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_hydration_day)
+    daily_summaries = downloader.get_daily_stats(date=start_date, days=5, url_param_function=downloader.url_param_summary_day)
+    hydration_days = downloader.get_daily_stats(date=start_date, days=5, url_param_function=downloader.url_param_hydration_day)
+    # monitoring_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_monitoring_day)
     '''
-    monitoring_days = downloader.get_daily_stats(date=start_date, days=5, stat_function=downloader.get_monitoring_day)
     sleep_dir = ConfigManager.get_or_create_sleep_dir()
     downloader.get_sleep(sleep_dir, date=start_date, days=5)
 
@@ -76,7 +76,9 @@ def main(username=None, password=None):
     if not download_instance.login(username, password):
         logger.error("Failed to login!")
         sys.exit()
-    download_data(downloader=download_instance, activity_count=100, start_date=datetime.date.fromisoformat("2023-07-30"), end_date=datetime.date.fromisoformat("2023-08-01"))
+    download_data(downloader=download_instance, activity_count=100,
+                  start_date=datetime.date.fromisoformat("2023-07-30"),
+                  end_date=datetime.date.fromisoformat("2023-08-01"))
 
 
 if __name__ == "__main__":
