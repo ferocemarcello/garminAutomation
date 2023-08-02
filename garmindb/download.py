@@ -169,19 +169,18 @@ class Download:
         url = f"{self.garmin_connect_daily_hydration_url}/{date.strftime('%Y-%m-%d')}"
         return url, None
 
-    def __get_weight_day(self, directory, day, overwrite=False):
-        date_str = day.strftime('%Y-%m-%d')
-        params = {
-            'startDate': date_str,
-            'endDate': date_str,
-            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(day)))
+    def url_param_sleep_day(self, date: datetime.date):
+        return f'{self.garmin_connect_sleep_daily_url}/{self.display_name}', {
+            'date': date.strftime("%Y-%m-%d"),
+            'nonSleepBufferMinutes': 60
         }
-        json_filename = f'{directory}/weight_{date_str}'
-        self.modern_rest_client.download_json_file(self.garmin_connect_weight_url, json_filename, overwrite, params)
 
-    def get_weight(self, directory, date, days, overwrite=True):
-        """Download the sleep data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_weight_day, directory, date, days, overwrite)
+    def url_param_weight_day(self, date: datetime.date):
+        return self.garmin_connect_weight_url, {
+            'startDate': date.strftime('%Y-%m-%d'),
+            'endDate': date.strftime('%Y-%m-%d'),
+            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
+        }
 
     def get_activities(self, count, start_date: datetime.date, end_date: datetime.date):
         """Download activities files from Garmin Connect"""
@@ -204,19 +203,6 @@ class Download:
     def get_activity_types(self):
         """Download the activity types from Garmin Connect"""
         return self.activity_service_rest_client.get(leaf_route='activityTypes', params=None, ignore_errors=None).json()
-
-    def __get_sleep_day(self, directory, date, overwite=False):
-        json_filename = f'{directory}/sleep_{date}'
-        params = {
-            'date': date.strftime("%Y-%m-%d"),
-            'nonSleepBufferMinutes': 60
-        }
-        url = f'{self.garmin_connect_sleep_daily_url}/{self.display_name}'
-        self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
-
-    def get_sleep(self, directory, date, days, overwrite=True):
-        """Download the sleep data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_sleep_day, directory, date, days, overwrite)
 
     def __get_rhr_day(self, directory, day, overwrite=False):
         date_str = day.strftime('%Y-%m-%d')
