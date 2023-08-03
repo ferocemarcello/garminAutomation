@@ -89,8 +89,8 @@ def main(username=None, password=None, start_date: str = None, end_date: str = N
 
 
 if __name__ == "__main__":
-    username = sys.argv[1]
-    password = sys.argv[2]
-    start_date = sys.argv[3]
-    end_date = sys.argv[4]
-    main(username=username, password=password, start_date=start_date, end_date=end_date)
+    username_input = sys.argv[1]
+    password_input = sys.argv[2]
+    start_date_input = sys.argv[3]
+    end_date_input = sys.argv[4]
+    main(username=username_input, password=password_input, start_date=start_date_input, end_date=end_date_input)

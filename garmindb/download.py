@@ -5,6 +5,7 @@ __copyright__ = "Copyright Tom Goetz"
 __license__ = "GPL"
 
 import datetime
+import enum
 import json
 import re
 import time
@@ -44,9 +45,9 @@ class Download:
 
     garmin_connect_activity_search_url = "proxy/activitylist-service/activities/search/activities"
 
-    garmin_connect_usersummary_url = "proxy/usersummary-service/usersummary"
-    garmin_connect_daily_summary_url = garmin_connect_usersummary_url + "/daily"
-    garmin_connect_daily_hydration_url = garmin_connect_usersummary_url + "/hydration/allData"
+    garmin_connect_user_summary_url = "proxy/usersummary-service/usersummary"
+    garmin_connect_daily_summary_url = garmin_connect_user_summary_url + "/daily"
+    garmin_connect_daily_hydration_url = garmin_connect_user_summary_url + "/hydration/allData"
 
     # https://connect.garmin.com/modern/proxy/usersummary-service/usersummary/hydration/allData/2019-11-29
 
@@ -126,7 +127,7 @@ class Download:
             '_csrf': found.group(1)
         }
         post_headers = {
-            'Referer': response.url,
+            'Referer': response.compose_url,
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
@@ -193,6 +194,7 @@ class Download:
             "startDate": start_date.isoformat(),
             "endDate": end_date.isoformat()
         }).json()
+
         all_activities = dict()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
