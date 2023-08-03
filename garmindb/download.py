@@ -69,7 +69,7 @@ class Download:
         self.download_days_overlap = 3  # Existing downloaded data will be re-downloaded and overwritten if it is
         # within this number of days of now.
 
-    def __get_json(self, page_html, key):
+    def get_json(self, page_html, key):
         found = re.search(key + r" = (\{.*\});", page_html, re.M)
         if found:
             json_text = found.group(1).replace('\\"', '"')
@@ -134,18 +134,11 @@ class Download:
             'ticket': found.group(1)
         }
         response = self.modern_rest_client.get('', params=params)
-        self.user_prefs = self.__get_json(response.text, 'VIEWER_USERPREFERENCES')
+        self.user_prefs = self.get_json(response.text, 'VIEWER_USERPREFERENCES')
         self.display_name = self.user_prefs['displayName']
-        self.social_profile = self.__get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
+        self.social_profile = self.get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
         self.full_name = self.social_profile['fullName']
         return True
-
-    def __get_stat(self, stat_function, directory, date, days, overwrite):
-        for day in tqdm(range(0, days), unit='days'):
-            download_date = date + datetime.timedelta(days=day)
-            stat_function(directory, download_date, overwrite)
-            # pause for a second between every page access
-            time.sleep(1)
 
     def get_daily_stats(self, date, days, url_param_function):
         daily_stats = list()
@@ -182,6 +175,15 @@ class Download:
             '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
         }
 
+    def url_param_rhr_day(self, date: datetime.date):
+        date_str = date.strftime('%Y-%m-%d')
+        params = {
+            'fromDate': date_str,
+            'untilDate': date_str,
+            'metricId': 60
+        }
+        return f'{self.garmin_connect_rhr}/{self.display_name}', params
+
     def get_activities(self, count, start_date: datetime.date, end_date: datetime.date):
         """Download activities files from Garmin Connect"""
         activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
@@ -199,22 +201,3 @@ class Download:
             # pause for a second between every page access
             time.sleep(1)
         return all_activities
-
-    def get_activity_types(self):
-        """Download the activity types from Garmin Connect"""
-        return self.activity_service_rest_client.get(leaf_route='activityTypes', params=None, ignore_errors=None).json()
-
-    def __get_rhr_day(self, directory, day, overwrite=False):
-        date_str = day.strftime('%Y-%m-%d')
-        json_filename = f'{directory}/rhr_{date_str}'
-        params = {
-            'fromDate': date_str,
-            'untilDate': date_str,
-            'metricId': 60
-        }
-        url = f'{self.garmin_connect_rhr}/{self.display_name}'
-        self.modern_rest_client.download_json_file(url, json_filename, overwrite, params)
-
-    def get_rhr(self, directory, date, days, overwite):
-        """Download the resting heart rate data from Garmin Connect and save to a JSON file."""
-        self.__get_stat(self.__get_rhr_day, directory, date, days, overwite)

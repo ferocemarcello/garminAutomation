@@ -49,22 +49,22 @@ def download_data(downloader: Download, activity_count, start_date: datetime.dat
     downloaded data if indicated."""
 
     count_days = (end_date - start_date).days + 1
-    '''activity_types = downloader.get_activity_types()
+    activity_types = downloader.activity_service_rest_client.get(leaf_route='activityTypes', params=None, ignore_errors=None).json()
     activities = downloader.get_activities(count=activity_count, start_date=start_date, end_date=end_date)
-    daily_summaries = downloader.get_daily_stats(date=start_date, days=count_days, url_param_function=downloader.url_param_summary_day)
-    hydration_days = downloader.get_daily_stats(date=start_date, days=count_days, url_param_function=downloader.url_param_hydration_day)
+    daily_summaries = downloader.get_daily_stats(date=start_date, days=count_days,
+                                                 url_param_function=downloader.url_param_summary_day)
+    hydration_days = downloader.get_daily_stats(date=start_date, days=count_days,
+                                                url_param_function=downloader.url_param_hydration_day)
     # monitoring_days = downloader.get_daily_stats(date=start_date, days=count_days, stat_function=downloader.get_monitoring_day)
-    
+
     sleep_days = downloader.get_daily_stats(date=start_date, days=count_days,
                                             url_param_function=downloader.url_param_sleep_day)
-    
+
     weight_days = downloader.get_daily_stats(date=start_date, days=count_days,
                                              url_param_function=downloader.url_param_weight_day)
-    '''
-    date, days = __get_date_and_days(GarminDb(db_params_dict), False, RestingHeartRate,
-                                     RestingHeartRate.resting_heart_rate, 'rhr')
-    rhr_dir = ConfigManager.get_or_create_rhr_dir()
-    downloader.get_rhr(rhr_dir, date, days, False)
+
+    rhr_days = downloader.get_daily_stats(date=start_date, days=count_days,
+                                          url_param_function=downloader.url_param_rhr_day)
 
 
 def main(username=None, password=None):
