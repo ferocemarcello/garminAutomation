@@ -48,8 +48,7 @@ def download_data(downloader: Download, activity_count, start_date: datetime.dat
     downloaded data if indicated."""
 
     count_days = (end_date - start_date).days + 1
-    activity_types = downloader.activity_service_rest_client.get(leaf_route='activityTypes', params=None,
-                                                                 ignore_errors=None).json()
+    activity_types = downloader.activity_service_rest_client_pers.get(leaf_route='activityTypes', params=None).json()
     activities = downloader.get_activities(count=activity_count, start_date=start_date, end_date=end_date)
     daily_summaries = downloader.get_daily_stats(date=start_date, days=count_days,
                                                  url_param_function=downloader.url_param_summary_day)

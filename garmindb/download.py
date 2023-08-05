@@ -11,7 +11,6 @@ import time
 
 import cloudscraper
 import fitfile.conversions as conversions
-from idbutils import RestClient
 from tqdm import tqdm
 
 from scripts.rest_client_pers import RestClientPers
@@ -67,11 +66,13 @@ class Download:
         self.session = cloudscraper.CloudScraper()
         self.sso_rest_client_pers = RestClientPers(session=self.session, host='sso.garmin.com', base_route='sso',
                                                    additional_headers=self.garmin_headers)
-        self.modern_rest_client = RestClient(session=self.session, host='connect.garmin.com', base_route='modern',
-                                             aditional_headers=self.garmin_headers)
-        self.activity_service_rest_client = RestClient.inherit(self.modern_rest_client,
-                                                               "proxy/activity-service/activity")
-        self.download_service_rest_client = RestClient.inherit(self.modern_rest_client, "proxy/download-service/files")
+        self.modern_rest_client_pers = RestClientPers(session=self.session, host='connect.garmin.com',
+                                                      base_route='modern',
+                                                      additional_headers=self.garmin_headers)
+        self.activity_service_rest_client_pers = RestClientPers.inherit(self.modern_rest_client_pers,
+                                                                        "proxy/activity-service/activity")
+        self.download_service_rest_client_pers = RestClientPers.inherit(self.modern_rest_client_pers,
+                                                                        "proxy/download-service/files")
 
     def login(self, username, password):
         """Login to Garmin Connect."""
@@ -84,11 +85,11 @@ class Download:
             'Referer': self.garmin_connect_login_url
         }
         params = {
-            'service': self.modern_rest_client.url(),
+            'service': self.modern_rest_client_pers.compose_url(),
             'webhost': self.garmin_connect_base_url,
             'source': self.garmin_connect_login_url,
-            'redirectAfterAccountLoginUrl': self.modern_rest_client.url(),
-            'redirectAfterAccountCreationUrl': self.modern_rest_client.url(),
+            'redirectAfterAccountLoginUrl': self.modern_rest_client_pers.compose_url(),
+            'redirectAfterAccountCreationUrl': self.modern_rest_client_pers.compose_url(),
             'gauthHost': self.sso_rest_client_pers.compose_url(),
             'locale': 'en_US',
             'id': 'gauth-widget',
@@ -131,7 +132,7 @@ class Download:
         params = {
             'ticket': found.group(1)
         }
-        response = self.modern_rest_client.get('', params=params)
+        response = self.modern_rest_client_pers.get('', params=params)
         self.user_prefs = get_json(response.text, 'VIEWER_USERPREFERENCES')
         self.display_name = self.user_prefs['displayName']
         self.social_profile = get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
@@ -143,7 +144,7 @@ class Download:
         for day in tqdm(range(0, days), unit='days'):
             download_date = date + datetime.timedelta(days=day)
             static_url, static_params = url_param_function(download_date)
-            daily_stats.append(self.modern_rest_client.get(leaf_route=static_url, params=static_params).json())
+            daily_stats.append(self.modern_rest_client_pers.get(leaf_route=static_url, params=static_params).json())
             # pause for a second between every page access
             time.sleep(1)
         return daily_stats
@@ -184,7 +185,7 @@ class Download:
 
     def get_activities(self, count, start_date: datetime.date, end_date: datetime.date):
         """Download activities files from Garmin Connect"""
-        activities = self.modern_rest_client.get(self.garmin_connect_activity_search_url, params={
+        activities = self.modern_rest_client_pers.get(self.garmin_connect_activity_search_url, params={
             'start': str(0),
             "limit": str(count),
             "startDate": start_date.isoformat(),
@@ -194,8 +195,7 @@ class Download:
         all_activities = dict()
         for activity in tqdm(activities or [], unit='activities'):
             activity_id_str = str(activity['activityId'])
-            activity_details = self.activity_service_rest_client.get(leaf_route=activity_id_str, params=None,
-                                                                     ignore_errors=None).json()
+            activity_details = self.activity_service_rest_client_pers.get(leaf_route=activity_id_str, params=None).json()
             all_activities.__setitem__(activity_id_str, activity_details)
             # pause for a second between every page access
             time.sleep(1)
