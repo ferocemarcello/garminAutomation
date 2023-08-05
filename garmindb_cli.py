@@ -1,6 +1,6 @@
 import datetime
 import sys
-from scripts.download import Download
+from download import Download
 
 
 def download_data(downloader: Download, activity_count, start_date: datetime.date, end_date: datetime.date):

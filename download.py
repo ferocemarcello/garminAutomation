@@ -6,7 +6,7 @@ import time
 import cloudscraper
 from tqdm import tqdm
 
-from scripts.rest_client_pers import RestClientPers
+from rest_client_pers import RestClientPers
 
 
 def get_static_url_params(url: str, params: dict):
