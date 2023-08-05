@@ -9,19 +9,6 @@ class RestProtocolPers(enum.Enum):
 
 
 class RestClientPers:
-    """Class that encapsulates REST functionality for a single API endpoint."""
-
-    agents = {
-        'Chrome_Linux': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/1337 '
-                        'Safari/537.36',
-        'Firefox_MacOS': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:66.0) Gecko/20100101 Firefox/66.0'
-    }
-    agent = agents['Firefox_MacOS']
-
-    default_headers = {
-        # 'User-Agent'    : agent,
-        # 'Accept'        : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-    }
 
     def __init__(self, session, host, base_route, protocol=RestProtocolPers.https, port=443, headers=None,
                  additional_headers=None):
