@@ -1,34 +1,6 @@
 import datetime
-import logging
 import sys
-from garmindb import ConfigManager, GarminConnectConfigManager, PluginManager
 from scripts.download import Download
-
-logging.basicConfig(filename='garmindb.log', filemode='w', level=logging.INFO)
-logger = logging.getLogger(__file__)
-logger.addHandler(logging.StreamHandler(stream=sys.stdout))
-root_logger = logging.getLogger()
-
-gc_config = GarminConnectConfigManager()
-db_params_dict = ConfigManager.get_db_params()
-plugin_manager = PluginManager(ConfigManager.get_or_create_plugins_dir(), db_params_dict)
-
-
-def __get_date_and_days(db, latest, table, col, stat_name):
-    if latest:
-        last_ts = table.latest_time(db, col)
-        if last_ts is None:
-            date, days = gc_config.stat_start_date(stat_name)
-        else:
-            # start from the day before the last day in the DB
-            date = last_ts.date() if isinstance(last_ts, datetime.datetime) else last_ts
-            days = max((datetime.date.today() - date).days, 1)
-    else:
-        date, days = gc_config.stat_start_date(stat_name)
-        days = min((datetime.date.today() - date).days, days)
-    if date is None or days is None:
-        sys.exit()
-    return date, days
 
 
 def download_data(downloader: Download, activity_count, start_date: datetime.date, end_date: datetime.date):
@@ -64,11 +36,9 @@ def load_data_into_sheet(start_date, end_date, interval_data):
 
 def main(username=None, password=None, start_date: str = None, end_date: str = None):
     if None in [username, password, start_date, end_date]:
-        logger.error("One of the inputs is None")
         sys.exit()
     download_instance = Download()
     if not download_instance.login(username, password):
-        logger.error("Failed to login!")
         sys.exit()
     interval_data = download_data(downloader=download_instance, activity_count=100,
                                   start_date=datetime.date.fromisoformat(start_date),
