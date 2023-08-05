@@ -1,7 +1,7 @@
 import enum
 
 
-class RestProtocol(enum.Enum):
+class RestProtocolPers(enum.Enum):
     """Enums for the protocols used for REST requests."""
 
     http = 'http'
@@ -23,7 +23,7 @@ class RestClientPers:
         # 'Accept'        : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
     }
 
-    def __init__(self, session, host, base_route, protocol=RestProtocol.https, port=443, headers=None,
+    def __init__(self, session, host, base_route, protocol=RestProtocolPers.https, port=443, headers=None,
                  additional_headers=None):
         """Return a new RestClient instance given a requests session and the base URL of the API."""
         if additional_headers is None:
@@ -53,8 +53,8 @@ class RestClientPers:
             path = '%s/%s' % (self.base_route, leaf_route)
         else:
             path = self.base_route
-        if (self.protocol == RestProtocol.https and self.port == 443) or (
-                self.protocol == RestProtocol.http and self.port == 80):
+        if (self.protocol == RestProtocolPers.https and self.port == 443) or (
+                self.protocol == RestProtocolPers.http and self.port == 80):
             return f'{self.protocol.name}://{self.host}/{path}'
         return f'{self.protocol.name}://{self.host}:{self.port}/{path}'
 
