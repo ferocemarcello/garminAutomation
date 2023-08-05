@@ -1,20 +1,8 @@
-#!/usr/bin/env python3
-
-"""
-A script that imports and analyzes Garmin health device data into a database.
-
-The data is either copied from a USB mounted Garmin device or downloaded from Garmin Connect.
-"""
-
-__author__ = "Tom Goetz"
-__copyright__ = "Copyright Tom Goetz"
-__license__ = "GPL"
-
 import datetime
 import logging
 import sys
 from garmindb import ConfigManager, GarminConnectConfigManager, PluginManager
-from garmindb import Download
+from scripts.download import Download
 
 logging.basicConfig(filename='garmindb.log', filemode='w', level=logging.INFO)
 logger = logging.getLogger(__file__)

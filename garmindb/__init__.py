@@ -28,7 +28,6 @@ from .open_with_google_earth import OpenWithGoogleEarth
 from .checkup import Checkup
 
 from .copy import Copy
-from .download import Download
 from .analyze import Analyze
 from .plugin_manager import PluginManager
 from .version import format_version, log_version, python_version_check

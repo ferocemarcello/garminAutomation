@@ -1,4 +1,3 @@
-"""Class for downloading health data from Garmin Connect."""
 import datetime
 import json
 import re
@@ -190,7 +189,8 @@ class Download:
         all_activities = dict()
         for activity in tqdm(activities or [], unit='activity'):
             activity_id_str = str(activity['activityId'])
-            activity_details = self.activity_service_rest_client_pers.get(leaf_route=activity_id_str, params=None).json()
+            activity_details = self.activity_service_rest_client_pers\
+                .get(leaf_route=activity_id_str, params=None).json()
             all_activities.__setitem__(activity_id_str, activity_details)
             # pause for a second between every page access
             time.sleep(1)
