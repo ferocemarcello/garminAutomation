@@ -14,6 +14,8 @@ import fitfile.conversions as conversions
 from idbutils import RestClient
 from tqdm import tqdm
 
+from scripts.rest_client_pers import RestClientPers
+
 
 def get_static_url_params(url: str, params: dict):
     return url, params
@@ -30,11 +32,11 @@ class Download:
     """Class for downloading health data from Garmin Connect."""
 
     garmin_connect_base_url = "https://connect.garmin.com"
-    garmin_connect_enus_url = garmin_connect_base_url + "/en-US"
+    garmin_connect_en_us_url = garmin_connect_base_url + "/en-US"
 
     garmin_connect_sso_login = 'signin'
 
-    garmin_connect_login_url = garmin_connect_enus_url + "/signin"
+    garmin_connect_login_url = garmin_connect_en_us_url + "/signin"
 
     garmin_connect_css_url = 'https://static.garmincdn.com/com.garmin.connect/ui/css/gauth-custom-v1.2-min.css'
 
@@ -63,8 +65,8 @@ class Download:
         self.full_name = None
         self.display_name = None
         self.session = cloudscraper.CloudScraper()
-        self.sso_rest_client = RestClient(session=self.session, host='sso.garmin.com', base_route='sso',
-                                          aditional_headers=self.garmin_headers)
+        self.sso_rest_client_pers = RestClientPers(session=self.session, host='sso.garmin.com', base_route='sso',
+                                                   additional_headers=self.garmin_headers)
         self.modern_rest_client = RestClient(session=self.session, host='connect.garmin.com', base_route='modern',
                                              aditional_headers=self.garmin_headers)
         self.activity_service_rest_client = RestClient.inherit(self.modern_rest_client,
@@ -87,7 +89,7 @@ class Download:
             'source': self.garmin_connect_login_url,
             'redirectAfterAccountLoginUrl': self.modern_rest_client.url(),
             'redirectAfterAccountCreationUrl': self.modern_rest_client.url(),
-            'gauthHost': self.sso_rest_client.url(),
+            'gauthHost': self.sso_rest_client_pers.compose_url(),
             'locale': 'en_US',
             'id': 'gauth-widget',
             'cssUrl': self.garmin_connect_css_url,
@@ -111,7 +113,7 @@ class Download:
             'locationPromptShown': 'true',
             'showPassword': 'true'
         }
-        response = self.sso_rest_client.get(self.garmin_connect_sso_login, get_headers, params)
+        response = self.sso_rest_client_pers.get(self.garmin_connect_sso_login, get_headers, params)
         found = re.search(r"name=\"_csrf\" value=\"(\w*)", response.text, re.M)
 
         data = {
@@ -124,7 +126,7 @@ class Download:
             'Referer': response.url,
             'Content-Type': 'application/x-www-form-urlencoded'
         }
-        response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
+        response = self.sso_rest_client_pers.post(self.garmin_connect_sso_login, post_headers, params, data)
         found = re.search(r"\?ticket=([\w-]*)", response.text, re.M)
         params = {
             'ticket': found.group(1)
