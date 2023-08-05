@@ -23,6 +23,13 @@ def get_static_url_params(url: str, params: dict):
     return url, params
 
 
+def get_json(page_html, key):
+    found = re.search(key + r" = (\{.*\});", page_html, re.M)
+    if found:
+        json_text = found.group(1).replace('\\"', '"')
+        return json.loads(json_text)
+
+
 class Download:
     """Class for downloading health data from Garmin Connect."""
 
@@ -70,12 +77,6 @@ class Download:
         self.gc_config = GarminConnectConfigManager()
         self.download_days_overlap = 3  # Existing downloaded data will be re-downloaded and overwritten if it is
         # within this number of days of now.
-
-    def get_json(self, page_html, key):
-        found = re.search(key + r" = (\{.*\});", page_html, re.M)
-        if found:
-            json_text = found.group(1).replace('\\"', '"')
-            return json.loads(json_text)
 
     def login(self, username, password):
         """Login to Garmin Connect."""
@@ -136,9 +137,9 @@ class Download:
             'ticket': found.group(1)
         }
         response = self.modern_rest_client.get('', params=params)
-        self.user_prefs = self.get_json(response.text, 'VIEWER_USERPREFERENCES')
+        self.user_prefs = get_json(response.text, 'VIEWER_USERPREFERENCES')
         self.display_name = self.user_prefs['displayName']
-        self.social_profile = self.get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
+        self.social_profile = get_json(response.text, 'VIEWER_SOCIAL_PROFILE')
         self.full_name = self.social_profile['fullName']
         return True
 
