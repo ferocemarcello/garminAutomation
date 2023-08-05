@@ -66,14 +66,10 @@ class RestClientPers:
             additional_headers = {}
         total_headers = self.headers.copy()
         total_headers.update(additional_headers)
-        response = self.session.get(self.compose_url(leaf_route), headers=total_headers, params=params)
-        response.raise_for_status()
-        return response
+        return self.session.get(self.compose_url(leaf_route), headers=total_headers, params=params)
 
     def post(self, leaf_route, additional_headers, params, data):
         """Make a REST API call using the POST method."""
         total_headers = self.headers.copy()
         total_headers.update(additional_headers)
-        response = self.session.post(self.compose_url(leaf_route), headers=total_headers, params=params, data=data)
-        response.raise_for_status()
-        return response
+        return self.session.post(self.compose_url(leaf_route), headers=total_headers, params=params, data=data)

@@ -4,7 +4,6 @@ import re
 import time
 
 import cloudscraper
-import fitfile.conversions as conversions
 from tqdm import tqdm
 
 from scripts.rest_client_pers import RestClientPers
@@ -146,8 +145,7 @@ class Download:
     def url_param_summary_day(self, date: datetime.date):
         url = f'{self.garmin_connect_daily_summary_url}/{self.display_name}'
         params = {
-            'calendarDate': date.strftime('%Y-%m-%d'),
-            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
+            'calendarDate': date.strftime('%Y-%m-%d')
         }
         return url, params
 
@@ -165,7 +163,6 @@ class Download:
         return self.garmin_connect_weight_url, {
             'startDate': date.strftime('%Y-%m-%d'),
             'endDate': date.strftime('%Y-%m-%d'),
-            '_': str(conversions.dt_to_epoch_ms(conversions.date_to_dt(date)))
         }
 
     def url_param_rhr_day(self, date: datetime.date):
