@@ -131,10 +131,11 @@ class Download:
         self.full_name = self.social_profile['fullName']
         return True
 
-    def get_daily_stats(self, date, days, url_param_function):
+    def get_daily_stats(self, start_date: datetime.date, end_date: datetime.date, url_param_function):
         daily_stats = list()
-        for day in tqdm(range(0, days), unit='day'):
-            download_date = date + datetime.timedelta(days=day)
+        delta = end_date - start_date
+        for day in tqdm(range(delta.days+1), unit='day'):
+            download_date = start_date + datetime.timedelta(days=day)
             static_url, static_params = url_param_function(download_date)
             daily_stats.append(self.modern_rest_client_pers.get(leaf_route=static_url, params=static_params).json())
             # pause for a second between every page access

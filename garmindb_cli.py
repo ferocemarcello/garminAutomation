@@ -8,23 +8,22 @@ def download_data(downloader: Download, start_date: datetime.date, end_date: dat
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously
     downloaded data if indicated."""
 
-    count_days = (end_date - start_date).days + 1
     activity_types = downloader.activity_service_rest_client_pers.get(leaf_route='activityTypes', params=None).json()
     activities = downloader.get_activities(start_date=start_date, end_date=end_date)
-    daily_summaries = downloader.get_daily_stats(date=start_date, days=count_days,
+    daily_summaries = downloader.get_daily_stats(start_date=start_date, end_date=end_date,
                                                  url_param_function=downloader.url_param_summary_day)
-    hydration_days = downloader.get_daily_stats(date=start_date, days=count_days,
+    hydration_days = downloader.get_daily_stats(start_date=start_date, end_date=end_date,
                                                 url_param_function=downloader.url_param_hydration_day)
     # monitoring_days = downloader.get_daily_stats(date=start_date, days=count_days,
     # stat_function=downloader.get_monitoring_day)
 
-    sleep_days = downloader.get_daily_stats(date=start_date, days=count_days,
+    sleep_days = downloader.get_daily_stats(start_date=start_date, end_date=end_date,
                                             url_param_function=downloader.url_param_sleep_day)
 
-    weight_days = downloader.get_daily_stats(date=start_date, days=count_days,
+    weight_days = downloader.get_daily_stats(start_date=start_date, end_date=end_date,
                                              url_param_function=downloader.url_param_weight_day)
 
-    rhr_days = downloader.get_daily_stats(date=start_date, days=count_days,
+    rhr_days = downloader.get_daily_stats(start_date=start_date, end_date=end_date,
                                           url_param_function=downloader.url_param_rhr_day)
     date_dict = {}
     return {"activity_types": activity_types, "activities": activities, "daily_summaries": daily_summaries,
