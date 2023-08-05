@@ -55,7 +55,8 @@ def download_data(downloader: Download, activity_count, start_date: datetime.dat
                                                  url_param_function=downloader.url_param_summary_day)
     hydration_days = downloader.get_daily_stats(date=start_date, days=count_days,
                                                 url_param_function=downloader.url_param_hydration_day)
-    # monitoring_days = downloader.get_daily_stats(date=start_date, days=count_days, stat_function=downloader.get_monitoring_day)
+    # monitoring_days = downloader.get_daily_stats(date=start_date, days=count_days,
+    # stat_function=downloader.get_monitoring_day)
 
     sleep_days = downloader.get_daily_stats(date=start_date, days=count_days,
                                             url_param_function=downloader.url_param_sleep_day)
@@ -71,7 +72,7 @@ def download_data(downloader: Download, activity_count, start_date: datetime.dat
 
 
 def load_data_into_sheet(start_date, end_date, interval_data):
-    print(str([start_date,end_date,interval_data]))
+    print(str([start_date, end_date, interval_data]))
 
 
 def main(username=None, password=None, start_date: str = None, end_date: str = None):
