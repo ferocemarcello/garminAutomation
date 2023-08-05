@@ -14,8 +14,6 @@ import fitfile.conversions as conversions
 from idbutils import RestClient
 from tqdm import tqdm
 
-from .garmin_connect_config_manager import GarminConnectConfigManager
-
 
 def get_static_url_params(url: str, params: dict):
     return url, params
@@ -72,9 +70,6 @@ class Download:
         self.activity_service_rest_client = RestClient.inherit(self.modern_rest_client,
                                                                "proxy/activity-service/activity")
         self.download_service_rest_client = RestClient.inherit(self.modern_rest_client, "proxy/download-service/files")
-        self.gc_config = GarminConnectConfigManager()
-        self.download_days_overlap = 3  # Existing downloaded data will be re-downloaded and overwritten if it is
-        # within this number of days of now.
 
     def login(self, username, password):
         """Login to Garmin Connect."""
