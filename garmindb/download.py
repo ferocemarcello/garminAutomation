@@ -5,7 +5,6 @@ __copyright__ = "Copyright Tom Goetz"
 __license__ = "GPL"
 
 import datetime
-import enum
 import json
 import re
 import time
@@ -15,7 +14,6 @@ import fitfile.conversions as conversions
 from idbutils import RestClient
 from tqdm import tqdm
 
-from .config_manager import ConfigManager
 from .garmin_connect_config_manager import GarminConnectConfigManager
 
 
