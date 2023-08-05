@@ -25,29 +25,19 @@ class Download:
 
     garmin_connect_base_url = "https://connect.garmin.com"
     garmin_connect_en_us_url = garmin_connect_base_url + "/en-US"
-
     garmin_connect_sso_login = 'signin'
-
     garmin_connect_login_url = garmin_connect_en_us_url + "/signin"
-
     garmin_connect_css_url = 'https://static.garmincdn.com/com.garmin.connect/ui/css/gauth-custom-v1.2-min.css'
-
     garmin_connect_privacy_url = "//connect.garmin.com/en-U/privacy"
-
     garmin_connect_user_profile_url = "proxy/userprofile-service/userprofile"
     garmin_connect_wellness_url = "proxy/wellness-service/wellness"
     garmin_connect_sleep_daily_url = garmin_connect_wellness_url + "/dailySleepData"
     garmin_connect_rhr = "proxy/userstats-service/wellness/daily"
     garmin_connect_weight_url = "proxy/weight-service/weight/dateRange"
-
     garmin_connect_activity_search_url = "proxy/activitylist-service/activities/search/activities"
-
     garmin_connect_user_summary_url = "proxy/usersummary-service/usersummary"
     garmin_connect_daily_summary_url = garmin_connect_user_summary_url + "/daily"
     garmin_connect_daily_hydration_url = garmin_connect_user_summary_url + "/hydration/allData"
-
-    # https://connect.garmin.com/modern/proxy/usersummary-service/usersummary/hydration/allData/2019-11-29
-
     garmin_headers = {'NK': 'NT'}
 
     def __init__(self):
