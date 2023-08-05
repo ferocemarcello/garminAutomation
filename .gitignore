@@ -31,10 +31,6 @@ wheels/
 *.manifest
 *.spec
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -49,10 +45,6 @@ coverage.xml
 # Translations
 *.mo
 *.pot
-
-# Django stuff:
-*.log
-local_settings.py
 
 
 # PyBuilder
@@ -69,36 +61,3 @@ target/
 .venv
 venv/
 ENV/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-
-*.sublime-project
-*.sublime-workspace
-
-# project specific
-bin/
-
-bugreport.txt
-
-*.zip
-*.fit
-*.tcx
-*.html
-.*.conf
-GarminConnectConfig.json
-*stats.txt
-*.png
-test/test_files
-my-defines.mk
-test/*.txt
