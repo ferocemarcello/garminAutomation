@@ -126,7 +126,7 @@ class Download:
             '_csrf': found.group(1)
         }
         post_headers = {
-            'Referer': response.compose_url,
+            'Referer': response.url,
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         response = self.sso_rest_client.post(self.garmin_connect_sso_login, post_headers, params, data)
