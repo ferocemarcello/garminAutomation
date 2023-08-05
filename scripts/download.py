@@ -58,10 +58,9 @@ class Download:
         self.display_name = None
         self.session = cloudscraper.CloudScraper()
         self.sso_rest_client_pers = RestClientPers(session=self.session, host='sso.garmin.com', base_route='sso',
-                                                   additional_headers=self.garmin_headers)
+                                                   headers=self.garmin_headers)
         self.modern_rest_client_pers = RestClientPers(session=self.session, host='connect.garmin.com',
-                                                      base_route='modern',
-                                                      additional_headers=self.garmin_headers)
+                                                      base_route='modern', headers=self.garmin_headers)
         self.activity_service_rest_client_pers = RestClientPers.inherit(self.modern_rest_client_pers,
                                                                         "proxy/activity-service/activity")
         self.download_service_rest_client_pers = RestClientPers.inherit(self.modern_rest_client_pers,

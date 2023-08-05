@@ -10,21 +10,17 @@ class RestProtocolPers(enum.Enum):
 
 class RestClientPers:
 
-    def __init__(self, session, host, base_route, protocol=RestProtocolPers.https, port=443, headers=None,
-                 additional_headers=None):
+    def __init__(self, session, host, base_route, protocol=RestProtocolPers.https, port=443, headers=None):
         """Return a new RestClient instance given a requests session and the base URL of the API."""
-        if additional_headers is None:
-            additional_headers = {}
+        if headers is None:
+            self.headers = {}
+        else:
+            self.headers = headers
         self.session = session
         self.host = host
         self.protocol = protocol
         self.port = port
         self.base_route = base_route
-        if headers:
-            self.headers = headers
-        else:
-            self.headers = self.default_headers.copy()
-        self.headers.update(additional_headers)
 
     @classmethod
     def inherit(cls, rest_client, route):
