@@ -173,11 +173,9 @@ class Download:
         }
         return f'{self.garmin_connect_rhr}/{self.display_name}', params
 
-    def get_activities(self, count, start_date: datetime.date, end_date: datetime.date):
+    def get_activities(self, start_date: datetime.date, end_date: datetime.date):
         """Download activities files from Garmin Connect"""
         activities = self.modern_rest_client_pers.get(self.garmin_connect_activity_search_url, params={
-            'start': str(0),
-            "limit": str(count),
             "startDate": start_date.isoformat(),
             "endDate": end_date.isoformat()
         }).json()
