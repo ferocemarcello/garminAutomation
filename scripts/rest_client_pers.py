@@ -1,4 +1,5 @@
 import enum
+import cloudscraper
 
 
 class RestProtocolPers(enum.Enum):
@@ -10,7 +11,7 @@ class RestProtocolPers(enum.Enum):
 
 class RestClientPers:
 
-    def __init__(self, session, host, base_route, protocol=RestProtocolPers.https, port=443, headers=None):
+    def __init__(self, session: cloudscraper.CloudScraper, host, base_route, protocol=RestProtocolPers.https, port=443, headers=None):
         """Return a new RestClient instance given a requests session and the base URL of the API."""
         if headers is None:
             self.headers = {}
