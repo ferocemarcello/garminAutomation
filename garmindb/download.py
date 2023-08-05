@@ -1,9 +1,4 @@
 """Class for downloading health data from Garmin Connect."""
-
-__author__ = "Tom Goetz"
-__copyright__ = "Copyright Tom Goetz"
-__license__ = "GPL"
-
 import datetime
 import json
 import re
@@ -141,7 +136,7 @@ class Download:
 
     def get_daily_stats(self, date, days, url_param_function):
         daily_stats = list()
-        for day in tqdm(range(0, days), unit='days'):
+        for day in tqdm(range(0, days), unit='day'):
             download_date = date + datetime.timedelta(days=day)
             static_url, static_params = url_param_function(download_date)
             daily_stats.append(self.modern_rest_client_pers.get(leaf_route=static_url, params=static_params).json())
@@ -193,7 +188,7 @@ class Download:
         }).json()
 
         all_activities = dict()
-        for activity in tqdm(activities or [], unit='activities'):
+        for activity in tqdm(activities or [], unit='activity'):
             activity_id_str = str(activity['activityId'])
             activity_details = self.activity_service_rest_client_pers.get(leaf_route=activity_id_str, params=None).json()
             all_activities.__setitem__(activity_id_str, activity_details)
