@@ -110,6 +110,8 @@ class Download:
             'Content-Type': 'application/x-www-form-urlencoded'
         }
         response = self.sso_rest_client_pers.post(self.garmin_connect_sso_login, post_headers, params, data)
+        if response.status_code == 429:
+            raise Exception("Too many requests")
         found = re.search(r"\?ticket=([\w-]*)", response.text, re.M)
         params = {
             'ticket': found.group(1)
