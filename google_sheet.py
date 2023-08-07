@@ -9,10 +9,7 @@ class GoogleClient:
         pass
 
     def get_all_values_sheet(self, sheet_id:str):
-        sheet = self.client.open_by_key(sheet_id)
-        # Get the data from the sheet
-        data = sheet.get_all_values()
-        return data
+        return self.client.open_by_key(sheet_id).get_worksheet(0).get_all_values()
 
     def fill_dates(self, interval_data):
-        print(interval_data)
+        pass
