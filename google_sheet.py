@@ -4,7 +4,7 @@ import gspread
 class GoogleSheet:
     def __init__(self, google_sheet_file: str, credentials_file: str):
         self.sheet_id = google_sheet_file
-        self.client = gspread.create_from_service_account_file(credentials_file)
+        self.client = gspread.service_account(filename=credentials_file)
 
     def write_dates(self, start_date, end_date):
         pass
