@@ -1,5 +1,4 @@
 import datetime
-import os
 import sys
 from download import Download
 from google_sheet import GoogleClient
