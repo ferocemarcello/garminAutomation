@@ -2,6 +2,7 @@ import datetime
 import sys
 from download import Download
 from google_sheet import GoogleClient
+from google_sheet_oauth import GoogleOauth
 
 
 def download_data(downloader: Download, start_date: datetime.date, end_date: datetime.date):
@@ -46,6 +47,9 @@ def download_data(downloader: Download, start_date: datetime.date, end_date: dat
 def main(username=None, password=None, start_date: str = None, end_date: str = None, google_sheet_file: str = None):
     if None in [username, password, start_date, end_date, google_sheet_file]:
         sys.exit()
+
+    g_oauth = GoogleOauth()
+    sheet_values_oauth = g_oauth.get_all_values_sheet(sheet_id=google_sheet_file)
     g_sheet = GoogleClient(credentials_file="credentials/garminautomation_credentials.json")
     sheet_values = g_sheet.get_all_values_sheet(sheet_id=google_sheet_file)
     download_instance = Download()

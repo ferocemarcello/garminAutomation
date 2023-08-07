@@ -1,19 +1,20 @@
+import json
+
+from google.oauth2.service_account import Credentials
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 
-# The client ID and client secret
-scope = ['https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('credentials/client_secret_732661881343'
-                                                         '-tfkhdb1c7ov6ns6lnvhdoo4gbias077a.apps.googleusercontent'
-                                                         '.com.json',scope)
-client = gspread.authorize(creds)
 
-# Get the user's authorization code
-authorization_code = "your-authorization-code"
+class GoogleOauth:
+    scopes = [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive'
+    ]
+    credentials = json.load(open("credentials/client_secret_732661881343-tfkhdb1c7ov6ns6lnvhdoo4gbias077a.apps.googleusercontent.com.json"))
+    gc, authorized_user = gspread.oauth_from_dict(credentials)
 
-# Authorize the user
-access_token, refresh_token = client.authorize(authorization_code,
-                                               scopes=["https://www.googleapis.com/auth/drive.file"])
+    def __init__(self):
+        self.client = gspread.authorize(credentials=GoogleOauth.credentials)
 
-# Print the user's access token
-print(access_token)
+    def get_all_values_sheet(self, sheet_id: str):
+        return self.client.open_by_key(sheet_id).get_worksheet(0).get_all_values()
