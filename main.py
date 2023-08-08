@@ -53,7 +53,7 @@ def main(username=None, password=None, start_date: str = None, end_date: str = N
         sys.exit()
     interval_data = download_data(downloader=download_instance, start_date=datetime.date.fromisoformat(start_date),
                                   end_date=datetime.date.fromisoformat(end_date))
-    g_oauth.fill_dates(interval_data)
+    g_oauth.fill_data(interval_data=interval_data, sheet_id=google_sheet_file)
 
 
 if __name__ == "__main__":
