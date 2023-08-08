@@ -47,13 +47,13 @@ def main(username=None, password=None, start_date: str = None, end_date: str = N
     if None in [username, password, start_date, end_date, google_sheet_file]:
         sys.exit()
 
-    g_oauth = GoogleOauth(credentials_path="credentials/client_secret_oauth_desktop.json")
+    g_oauth = GoogleOauth(credentials_path="credentials/client_secret_oauth_desktop.json", sheet_id=google_sheet_file)
     download_instance = Download()
     if not download_instance.login(username, password):
         sys.exit()
     interval_data = download_data(downloader=download_instance, start_date=datetime.date.fromisoformat(start_date),
                                   end_date=datetime.date.fromisoformat(end_date))
-    g_oauth.fill_data(interval_data=interval_data, sheet_id=google_sheet_file)
+    g_oauth.fill_data(interval_data=interval_data)
 
 
 if __name__ == "__main__":
