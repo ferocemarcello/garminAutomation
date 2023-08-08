@@ -5,8 +5,7 @@ import gspread
 
 class GoogleOauth:
     scopes = [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
+        'https://www.googleapis.com/auth/spreadsheets'
     ]
 
     def __init__(self, credentials_path):
